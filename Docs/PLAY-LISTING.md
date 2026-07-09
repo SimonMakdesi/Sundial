@@ -120,12 +120,20 @@ Notes for reviewers / rationale:
 - Privacy policy URL (required even when collecting nothing — a one-page
   static site stating the above; GitHub Pages works).
 
-## Launch sequence (from the plan, §5b)
+## Launch sequence — organization account (decided 2026-07-09)
 
-1. Play Console developer account ($25, ID verification ~2 days).
-   Personal account ⇒ closed testing: **12 testers, 14 consecutive days**
-   before production access — recruit testers early, this is the long pole.
-2. Create app → upload AAB to **closed testing** track.
-3. Fill listing + Data Safety + content rating + QUERY_ALL_PACKAGES
-   declaration (text above).
-4. After the 14-day window and review: promote to production.
+Using the existing registered Swedish company. Organization accounts are
+exempt from the personal-account gate (12 testers / 14 consecutive days).
+
+1. **D-U-N-S number**: look up the company at dnb.com with the
+   organisationsnummer — Swedish companies often already have one
+   auto-generated from public registries. If absent, request free
+   (days–2 weeks).
+2. **Play Console: create an Organization account** ($25 one-time).
+   Legal name must match the organisationsnummer registration; a
+   company-domain email smooths verification. The company name appears
+   publicly as the developer.
+3. Create app → upload `app-release.aab`. Fill listing + Data Safety +
+   content rating + QUERY_ALL_PACKAGES declaration (all texts above).
+4. Optional but recommended: a short closed-testing round with a few
+   people (by choice — no mandated window), then promote to production.
