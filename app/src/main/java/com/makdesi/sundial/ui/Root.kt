@@ -41,18 +41,29 @@ import com.makdesi.sundial.theme.paletteFor
 import com.makdesi.sundial.theme.reducedMotion
 import kotlinx.coroutines.delay
 
-private enum class Layer { HOME, SETTINGS }
+private enum class Layer { HOME, SETTINGS, EDIT }
 
 @Composable
 fun SundialRoot(viewModel: SundialViewModel) {
     val home by viewModel.home.collectAsState()
     val apps by viewModel.apps.collectAsState()
+    val daySettings by viewModel.daySettings.collectAsState()
     val ritualFlags by viewModel.ritualFlags.collectAsState()
     val pendingRitual by viewModel.pendingRitual.collectAsState()
     val palette = animatedPalette(paletteFor(home.mode))
 
     var layer by remember { mutableStateOf(Layer.HOME) }
+    var editMode by remember { mutableStateOf(com.makdesi.sundial.domain.Mode.MORNING) }
     var searchOpen by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val isDefaultLauncher = remember(layer) {
+        val intent = android.content.Intent(android.content.Intent.ACTION_MAIN)
+            .addCategory(android.content.Intent.CATEGORY_HOME)
+        context.packageManager
+            .resolveActivity(intent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
+            ?.activityInfo?.packageName == context.packageName
+    }
     var toast by remember { mutableStateOf<String?>(null) }
     var toastKey by remember { mutableStateOf(0) }
 
@@ -91,7 +102,6 @@ fun SundialRoot(viewModel: SundialViewModel) {
                 Layer.HOME -> HomeScreen(
                     palette = palette,
                     home = home,
-                    apps = apps,
                     ritualFlags = ritualFlags,
                     onOpen = viewModel::open,
                     onOpenSettings = { layer = Layer.SETTINGS },
@@ -99,24 +109,44 @@ fun SundialRoot(viewModel: SundialViewModel) {
                 )
                 Layer.SETTINGS -> SettingsScreen(
                     palette = palette,
+                    daySettings = daySettings,
+                    installedApps = apps,
+                    isDefaultLauncher = isDefaultLauncher,
+                    onEditMode = {
+                        editMode = it
+                        layer = Layer.EDIT
+                    },
                     onDone = { layer = Layer.HOME },
+                )
+                Layer.EDIT -> ModeEditor(
+                    palette = palette,
+                    mode = editMode,
+                    config = daySettings[editMode] ?: com.makdesi.sundial.data.ModeConfig(),
+                    apps = apps,
+                    ritualFlags = ritualFlags,
+                    onToggleApp = { viewModel.toggleModeApp(editMode, it) },
+                    onToggleRitual = viewModel::toggleRitualFlag,
+                    onIntention = { viewModel.setIntention(editMode, it) },
+                    onBack = { layer = Layer.SETTINGS },
                 )
             }
         }
 
-        // Back from settings returns home; Back on home does nothing (it's the home screen).
-        BackHandler(enabled = layer == Layer.SETTINGS) { layer = Layer.HOME }
+        // Back walks the layers home; Back on home does nothing (it's the home screen).
+        BackHandler(enabled = layer != Layer.HOME) {
+            layer = if (layer == Layer.EDIT) Layer.SETTINGS else Layer.HOME
+        }
 
         if (searchOpen) {
             SearchSheet(
                 palette = palette,
                 apps = apps,
                 ritualFlags = ritualFlags,
+                awakePackages = home.awakePackages,
                 onOpen = {
                     searchOpen = false
                     viewModel.open(it)
                 },
-                onToggleRitual = viewModel::toggleRitualFlag,
                 onDismiss = { searchOpen = false },
             )
         }

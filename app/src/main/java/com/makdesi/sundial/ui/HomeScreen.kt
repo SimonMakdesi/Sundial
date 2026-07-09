@@ -69,6 +69,10 @@ data class HomeState(
     val dateline: String,
     val nextMode: Mode,
     val nextModeAt: String,
+    val modeApps: List<AppEntry>,
+    val intention: String,
+    val asleepCount: Int,
+    val awakePackages: Set<String>,
 )
 
 @Composable
@@ -79,6 +83,22 @@ fun Mode.label(): String = stringResource(
         Mode.EVENING -> R.string.mode_evening
     }
 )
+
+/** "6:00 – 9:00", localized (12h locales get "6:00 am – 9:00 am"). */
+@Composable
+fun Mode.spanLabel(): String {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val locale = java.util.Locale.getDefault()
+    val is24 = android.text.format.DateFormat.is24HourFormat(context)
+    val pattern = if (is24)
+        android.text.format.DateFormat.getBestDateTimePattern(locale, "Hm") else "h:mm a"
+    val fmt = java.time.format.DateTimeFormatter.ofPattern(pattern, locale)
+    val spans = com.makdesi.sundial.domain.MODE_SPANS
+    val index = spans.indexOfFirst { it.mode == this }
+    val start = spans[index].start
+    val end = spans[(index + 1) % spans.size].start
+    return "${fmt.format(start).lowercase(locale)} – ${fmt.format(end).lowercase(locale)}"
+}
 
 /** Crossfades every palette channel at the contract's timings (bg/ink 1.1s, horizon/wash 1.4s). */
 @Composable
@@ -113,7 +133,6 @@ fun animatedPalette(target: Palette): Palette {
 fun HomeScreen(
     palette: Palette,
     home: HomeState,
-    apps: List<AppEntry>,
     ritualFlags: Set<String>,
     onOpen: (AppEntry) -> Unit,
     onOpenSettings: () -> Unit,
@@ -240,6 +259,23 @@ fun HomeScreen(
                     modifier = Modifier.padding(top = 10.dp),
                 )
 
+                if (home.intention.isNotBlank()) {
+                    Column(Modifier.padding(top = 22.dp)) {
+                        Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
+                        Text(
+                            text = home.intention,
+                            fontFamily = Serif,
+                            fontWeight = FontWeight.Light,
+                            fontStyle = FontStyle.Italic,
+                            fontSize = 15.sp,
+                            lineHeight = 22.sp,
+                            color = palette.ink,
+                            modifier = Modifier.padding(vertical = 14.dp),
+                        )
+                        Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
+                    }
+                }
+
                 // app list with soft fade masks top and bottom, no scrollbar.
                 // Stretch overscroll is disabled: it would swallow the leftover
                 // drag that lets swiping past the end open search.
@@ -265,7 +301,7 @@ fun HomeScreen(
                             )
                         },
                 ) {
-                    items(apps, key = { it.packageName + "/" + it.activityClassName }) { app ->
+                    items(home.modeApps, key = { it.packageName + "/" + it.activityClassName }) { app ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -301,7 +337,7 @@ fun HomeScreen(
                 Text(
                     text = stringResource(
                         R.string.footer_rhythm,
-                        0, // apps asleep — real once per-mode lists arrive (M5)
+                        home.asleepCount,
                         home.nextMode.label(),
                         home.nextModeAt,
                     ),

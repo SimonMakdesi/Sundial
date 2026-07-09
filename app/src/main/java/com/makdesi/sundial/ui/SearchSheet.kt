@@ -1,8 +1,7 @@
 package com.makdesi.sundial.ui
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -53,16 +52,15 @@ import com.makdesi.sundial.theme.Serif
  * Swipe-up sheet: everything is findable, nothing is blocked (plan §3.4).
  * Apps outside the current mode carry a faint `asleep` tag but launch normally.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchSheet(
     palette: Palette,
     apps: List<AppEntry>,
     ritualFlags: Set<String>,
+    awakePackages: Set<String>,
     onOpen: (AppEntry) -> Unit,
-    onToggleRitual: (AppEntry) -> Unit, // debug-only until the mode editor (M5)
     onDismiss: () -> Unit,
-    awakePackages: Set<String>? = null, // null until per-mode lists exist (M5): everything is awake
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var query by remember { mutableStateOf("") }
@@ -138,12 +136,7 @@ fun SearchSheet(
             } else {
                 LazyColumn(Modifier.padding(top = 8.dp)) {
                     items(results, key = { it.packageName + "/" + it.activityClassName }) { app ->
-                        Column(
-                            Modifier.combinedClickable(
-                                onClick = { onOpen(app) },
-                                onLongClick = { onToggleRitual(app) },
-                            )
-                        ) {
+                        Column(Modifier.clickable { onOpen(app) }) {
                             Row(
                                 verticalAlignment = Alignment.Bottom,
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 11.dp),
@@ -156,7 +149,7 @@ fun SearchSheet(
                                     letterSpacing = 0.01.em,
                                     color = palette.ink,
                                 )
-                                if (awakePackages != null && app.packageName !in awakePackages) {
+                                if (app.packageName !in awakePackages) {
                                     Spacer(Modifier.width(10.dp))
                                     Text(
                                         text = stringResource(R.string.search_asleep),
