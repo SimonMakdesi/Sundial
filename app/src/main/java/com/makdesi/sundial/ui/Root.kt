@@ -140,6 +140,11 @@ fun SundialRoot(viewModel: SundialViewModel) {
         else -> Unit
     }
 
+    androidx.compose.runtime.CompositionLocalProvider(
+        com.makdesi.sundial.theme.LocalVoice provides
+            if (instrument) com.makdesi.sundial.theme.InstrumentVoice
+            else com.makdesi.sundial.theme.SignatureVoice
+    ) {
     Box(Modifier.fillMaxSize().background(palette.bg)) {
         AnimatedContent(
             targetState = layer,
@@ -266,7 +271,7 @@ fun SundialRoot(viewModel: SundialViewModel) {
             toast?.let {
                 Text(
                     text = it,
-                    fontFamily = Grotesk,
+                    fontFamily = com.makdesi.sundial.theme.LocalVoice.current.functional,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     letterSpacing = 0.03.em,
@@ -277,5 +282,6 @@ fun SundialRoot(viewModel: SundialViewModel) {
                 )
             }
         }
+    }
     }
 }

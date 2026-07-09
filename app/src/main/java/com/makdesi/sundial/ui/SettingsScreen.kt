@@ -45,6 +45,7 @@ import com.makdesi.sundial.data.WeatherCity
 import com.makdesi.sundial.data.WeatherState
 import com.makdesi.sundial.domain.Mode
 import com.makdesi.sundial.theme.Grotesk
+import com.makdesi.sundial.theme.LocalVoice
 import com.makdesi.sundial.theme.Palette
 import com.makdesi.sundial.theme.Serif
 import com.makdesi.sundial.theme.paletteFor
@@ -90,14 +91,14 @@ fun SettingsScreen(
             ) {
                 Text(
                     text = stringResource(R.string.settings_title),
-                    fontFamily = Serif,
-                    fontWeight = FontWeight.Light,
+                    fontFamily = LocalVoice.current.ceremonial,
+                    fontWeight = LocalVoice.current.titleWeight,
                     fontSize = 30.sp,
                     color = palette.ink,
                 )
                 Text(
                     text = stringResource(R.string.settings_done),
-                    fontFamily = Grotesk,
+                    fontFamily = LocalVoice.current.functional,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     letterSpacing = 0.05.em,
@@ -131,7 +132,7 @@ fun SettingsScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.settings_face),
-                        fontFamily = Grotesk,
+                        fontFamily = LocalVoice.current.functional,
                         fontWeight = FontWeight.Medium,
                         fontSize = 15.sp,
                         color = palette.ink,
@@ -153,7 +154,7 @@ fun SettingsScreen(
                     Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                         Text(
                             text = stringResource(R.string.settings_theme),
-                            fontFamily = Grotesk,
+                            fontFamily = LocalVoice.current.functional,
                             fontWeight = FontWeight.Medium,
                             fontSize = 15.sp,
                             color = palette.ink,
@@ -181,7 +182,7 @@ fun SettingsScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.settings_alignment),
-                        fontFamily = Grotesk,
+                        fontFamily = LocalVoice.current.functional,
                         fontWeight = FontWeight.Medium,
                         fontSize = 15.sp,
                         color = palette.ink,
@@ -234,7 +235,7 @@ fun SettingsScreen(
 
                 Text(
                     text = stringResource(R.string.settings_pause),
-                    fontFamily = Grotesk,
+                    fontFamily = LocalVoice.current.functional,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
                     letterSpacing = 0.03.em,
@@ -269,14 +270,14 @@ private fun SystemRow(
     ) {
         Text(
             text = label,
-            fontFamily = Grotesk,
+            fontFamily = LocalVoice.current.functional,
             fontWeight = FontWeight.Medium,
             fontSize = 15.sp,
             color = palette.ink,
         )
         Text(
             text = status,
-            fontFamily = Grotesk,
+            fontFamily = LocalVoice.current.meta,
             fontSize = 11.5.sp,
             letterSpacing = 0.05.em,
             color = palette.faint,
@@ -325,7 +326,7 @@ private fun WeatherRow(
             onValueChange = { query = it },
             singleLine = true,
             textStyle = androidx.compose.ui.text.TextStyle(
-                fontFamily = Grotesk,
+                fontFamily = LocalVoice.current.functional,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 color = palette.ink,
@@ -337,7 +338,7 @@ private fun WeatherRow(
                         if (query.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.settings_city_hint),
-                                fontFamily = Grotesk,
+                                fontFamily = LocalVoice.current.functional,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 14.sp,
                                 color = palette.faint.copy(alpha = palette.faint.alpha * .6f),
@@ -353,7 +354,7 @@ private fun WeatherRow(
         results.forEach { city ->
             Text(
                 text = "${city.name} — ${city.country}",
-                fontFamily = Grotesk,
+                fontFamily = LocalVoice.current.functional,
                 fontSize = 13.sp,
                 color = palette.faint,
                 modifier = Modifier
@@ -386,7 +387,7 @@ private fun <T> Segmented(
             val on = value == selected
             Text(
                 text = label,
-                fontFamily = Grotesk,
+                fontFamily = LocalVoice.current.functional,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 10.5.sp,
                 letterSpacing = 0.03.em,
@@ -407,7 +408,7 @@ private fun <T> Segmented(
 private fun SectionLabel(text: String, palette: Palette) {
     Text(
         text = text.uppercase(),
-        fontFamily = Grotesk,
+        fontFamily = LocalVoice.current.meta,
         fontWeight = FontWeight.Bold,
         fontSize = 11.sp,
         letterSpacing = 0.12.em,
@@ -456,14 +457,14 @@ private fun ModeCard(
             ) {
                 Text(
                     text = mode.label(),
-                    fontFamily = Serif,
+                    fontFamily = LocalVoice.current.ceremonial,
                     fontWeight = FontWeight.Normal,
                     fontSize = 19.sp,
                     color = palette.ink,
                 )
                 Text(
                     text = mode.spanLabel(),
-                    fontFamily = Grotesk,
+                    fontFamily = LocalVoice.current.meta,
                     fontSize = 11.5.sp,
                     letterSpacing = 0.05.em,
                     color = palette.faint,
@@ -473,7 +474,7 @@ private fun ModeCard(
             Text(
                 text = if (names.isEmpty()) stringResource(R.string.mode_card_empty)
                 else names.joinToString(" · "),
-                fontFamily = Grotesk,
+                fontFamily = LocalVoice.current.functional,
                 fontSize = 12.5.sp,
                 lineHeight = 20.sp,
                 color = palette.faint,
@@ -484,9 +485,9 @@ private fun ModeCard(
             if (config.intention.isNotBlank()) {
                 Text(
                     text = "“${config.intention}”",
-                    fontFamily = Serif,
+                    fontFamily = LocalVoice.current.ceremonial,
                     fontWeight = FontWeight.Light,
-                    fontStyle = FontStyle.Italic,
+                    fontStyle = LocalVoice.current.italic,
                     fontSize = 13.sp,
                     color = palette.ink,
                     modifier = Modifier.padding(top = 8.dp),

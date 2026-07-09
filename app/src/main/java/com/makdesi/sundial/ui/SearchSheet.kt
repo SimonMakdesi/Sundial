@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import com.makdesi.sundial.R
 import com.makdesi.sundial.data.AppEntry
 import com.makdesi.sundial.theme.Grotesk
+import com.makdesi.sundial.theme.LocalVoice
 import com.makdesi.sundial.theme.Palette
 import com.makdesi.sundial.theme.Serif
 
@@ -96,7 +97,7 @@ fun SearchSheet(
                 onValueChange = { query = it },
                 singleLine = true,
                 textStyle = TextStyle(
-                    fontFamily = Grotesk,
+                    fontFamily = LocalVoice.current.functional,
                     fontWeight = FontWeight.Medium,
                     fontSize = 15.sp,
                     color = palette.ink,
@@ -109,7 +110,7 @@ fun SearchSheet(
                             if (query.isEmpty()) {
                                 Text(
                                     text = stringResource(R.string.search_placeholder),
-                                    fontFamily = Grotesk,
+                                    fontFamily = LocalVoice.current.functional,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 15.sp,
                                     color = palette.faint.copy(alpha = palette.faint.alpha * .6f),
@@ -129,9 +130,9 @@ fun SearchSheet(
             if (results.isEmpty()) {
                 Text(
                     text = stringResource(R.string.search_empty),
-                    fontFamily = Serif,
+                    fontFamily = LocalVoice.current.ceremonial,
                     fontWeight = FontWeight.Light,
-                    fontStyle = FontStyle.Italic,
+                    fontStyle = LocalVoice.current.italic,
                     fontSize = 13.sp,
                     color = palette.faint,
                     textAlign = TextAlign.Center,
@@ -153,7 +154,7 @@ fun SearchSheet(
                                 @Composable
                                 fun androidx.compose.foundation.layout.RowScope.name() = Text(
                                     text = app.label.lowercase(),
-                                    fontFamily = Grotesk,
+                                    fontFamily = LocalVoice.current.functional,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 17.sp,
                                     letterSpacing = 0.01.em,
@@ -169,7 +170,7 @@ fun SearchSheet(
                                         Spacer(Modifier.width(10.dp))
                                         Text(
                                             text = stringResource(R.string.search_asleep),
-                                            fontFamily = Grotesk,
+                                            fontFamily = LocalVoice.current.meta,
                                             fontSize = 12.sp,
                                             letterSpacing = 0.03.em,
                                             color = palette.faint,

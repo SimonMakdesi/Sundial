@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makdesi.sundial.R
 import com.makdesi.sundial.theme.Grotesk
+import com.makdesi.sundial.theme.LocalVoice
 import com.makdesi.sundial.theme.Motion
 import com.makdesi.sundial.theme.Palette
 import com.makdesi.sundial.theme.Serif
@@ -117,8 +118,8 @@ fun RitualOverlay(
                     text = stringResource(
                         if (choicesShown) R.string.ritual_still else R.string.ritual_line
                     ),
-                    fontFamily = Serif,
-                    fontWeight = FontWeight.Light,
+                    fontFamily = LocalVoice.current.ceremonial,
+                    fontWeight = LocalVoice.current.titleWeight,
                     fontSize = 22.sp,
                     color = palette.ink,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
@@ -131,7 +132,7 @@ fun RitualOverlay(
                     ) {
                         Text(
                             text = stringResource(R.string.ritual_open_ten),
-                            fontFamily = Grotesk,
+                            fontFamily = LocalVoice.current.functional,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 13.5.sp,
                             color = palette.ink,
@@ -142,7 +143,7 @@ fun RitualOverlay(
                         )
                         Text(
                             text = stringResource(R.string.ritual_not_now),
-                            fontFamily = Grotesk,
+                            fontFamily = LocalVoice.current.functional,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 13.5.sp,
                             color = palette.bg,

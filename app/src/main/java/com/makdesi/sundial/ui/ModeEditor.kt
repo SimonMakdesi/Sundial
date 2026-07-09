@@ -45,6 +45,7 @@ import com.makdesi.sundial.data.AppEntry
 import com.makdesi.sundial.data.ModeConfig
 import com.makdesi.sundial.domain.Mode
 import com.makdesi.sundial.theme.Grotesk
+import com.makdesi.sundial.theme.LocalVoice
 import com.makdesi.sundial.theme.Palette
 import com.makdesi.sundial.theme.Serif
 
@@ -86,14 +87,14 @@ fun ModeEditor(
             ) {
                 Text(
                     text = mode.label(),
-                    fontFamily = Serif,
-                    fontWeight = FontWeight.Light,
+                    fontFamily = LocalVoice.current.ceremonial,
+                    fontWeight = LocalVoice.current.titleWeight,
                     fontSize = 30.sp,
                     color = palette.ink,
                 )
                 Text(
                     text = stringResource(R.string.editor_back),
-                    fontFamily = Grotesk,
+                    fontFamily = LocalVoice.current.functional,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     letterSpacing = 0.05.em,
@@ -106,7 +107,7 @@ fun ModeEditor(
 
             Text(
                 text = mode.spanLabel(),
-                fontFamily = Grotesk,
+                fontFamily = LocalVoice.current.meta,
                 fontSize = 13.sp,
                 color = palette.faint,
                 modifier = Modifier.padding(top = 8.dp),
@@ -120,9 +121,9 @@ fun ModeEditor(
                 },
                 singleLine = true,
                 textStyle = TextStyle(
-                    fontFamily = Serif,
+                    fontFamily = LocalVoice.current.ceremonial,
                     fontWeight = FontWeight.Light,
-                    fontStyle = FontStyle.Italic,
+                    fontStyle = LocalVoice.current.italic,
                     fontSize = 15.sp,
                     color = palette.ink,
                 ),
@@ -133,9 +134,9 @@ fun ModeEditor(
                             if (intention.isEmpty()) {
                                 Text(
                                     text = stringResource(R.string.editor_intention_hint),
-                                    fontFamily = Serif,
+                                    fontFamily = LocalVoice.current.ceremonial,
                                     fontWeight = FontWeight.Light,
-                                    fontStyle = FontStyle.Italic,
+                                    fontStyle = LocalVoice.current.italic,
                                     fontSize = 15.sp,
                                     color = palette.faint.copy(alpha = palette.faint.alpha * .6f),
                                 )
@@ -150,7 +151,7 @@ fun ModeEditor(
 
             Text(
                 text = stringResource(R.string.editor_legend),
-                fontFamily = Grotesk,
+                fontFamily = LocalVoice.current.meta,
                 fontSize = 11.sp,
                 lineHeight = 17.sp,
                 color = palette.faint,
@@ -162,7 +163,7 @@ fun ModeEditor(
                 onValueChange = { query = it },
                 singleLine = true,
                 textStyle = TextStyle(
-                    fontFamily = Grotesk,
+                    fontFamily = LocalVoice.current.functional,
                     fontWeight = FontWeight.Medium,
                     fontSize = 15.sp,
                     color = palette.ink,
@@ -174,7 +175,7 @@ fun ModeEditor(
                             if (query.isEmpty()) {
                                 Text(
                                     text = stringResource(R.string.editor_search_hint),
-                                    fontFamily = Grotesk,
+                                    fontFamily = LocalVoice.current.functional,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 15.sp,
                                     color = palette.faint.copy(alpha = palette.faint.alpha * .6f),
@@ -191,9 +192,9 @@ fun ModeEditor(
             if (config.apps.size > 8) {
                 Text(
                     text = stringResource(R.string.editor_fullness, config.apps.size),
-                    fontFamily = Serif,
+                    fontFamily = LocalVoice.current.ceremonial,
                     fontWeight = FontWeight.Light,
-                    fontStyle = FontStyle.Italic,
+                    fontStyle = LocalVoice.current.italic,
                     fontSize = 12.5.sp,
                     color = palette.faint,
                     modifier = Modifier.padding(top = 8.dp),
@@ -237,7 +238,7 @@ fun ModeEditor(
                             }
                             Text(
                                 text = app.label.lowercase(),
-                                fontFamily = Grotesk,
+                                fontFamily = LocalVoice.current.functional,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 15.sp,
                                 color = if (included) palette.ink
@@ -253,7 +254,7 @@ fun ModeEditor(
                             val ritualOn = app.packageName in ritualFlags
                             Text(
                                 text = "☉",
-                                fontFamily = Serif,
+                                fontFamily = LocalVoice.current.ceremonial,
                                 fontSize = 15.sp,
                                 color = if (ritualOn) palette.ink
                                 else palette.faint.copy(alpha = palette.faint.alpha * .35f),
