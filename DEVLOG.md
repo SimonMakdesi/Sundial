@@ -4,6 +4,38 @@ Running log of development sessions. Newest first.
 
 ---
 
+## Entry 2 — 2026-07-09 (evening)
+
+**Summary:** v1 finished (M8–M10: onboarding, pause, hardening, release prep — signed AAB builds), then the editions system arrived ahead of schedule: the Instrument face from `sundial-two-faces.html`, full app-wide re-voicing, the face gallery with live previews, sun-theming for both faces, and a lock screen that follows the light.
+
+### What Was Worked On
+
+- **M8 — Onboarding & Pause:** four-beat first-run (welcome → picker → whispers offer → make-it-home), under a minute verified from `pm clear`. Onboarding replaced the silent auto-seed and only fills empty modes. Pause shows the plain icon grid, Resume toasts "Welcome back.", paused state persists.
+- **M9 — Hardening:** fixed the 480dp column cap (fillMaxSize defeated widthIn — visible in landscape), long-name ellipsis, a11y roles/descriptions (toggleable checks, ☉ switches, dots), RTL verified end-to-end, cold start 415/325ms (release, emulator), no wakelocks.
+- **M10 — Release prep:** adaptive ☉ icon (dawn-paper bg, ink mark, monochrome layer), v1.0.0, upload keystore + gitignored `key.properties` (release falls back to debug signing when absent), signed AAB, `Docs/PLAY-LISTING.md` (listing copy, Data Safety, QUERY_ALL_PACKAGES text, org-account launch path — user has a registered Swedish company).
+- **Copy decision:** ritual button "Open for 10 min" → **"Open"** (no lockout implication; the 10-min quiet-skip window is unchanged, now unadvertised).
+- **Editions (faces):** `Face` enum persisted; **Instrument** face implemented per two-faces demo — Space Grotesk + IBM Plex Mono, instrument scale with live day-fraction marker, numbered ruled rows, split mono footer, single #E8501E accent for live info only.
+- **FaceVoice:** composition-local typography (ceremonial/functional/meta + italic posture + headline weight) re-voices settings, editor, search, ritual, toasts per face. Signature unchanged; onboarding and Paused stay face-less by design.
+- **Face gallery:** the Face row opens a horizontal pager of live home miniatures (real apps/intention/time, current sun-theme) — faces are the themes users browse; the sun-theme control stayed as the inline segmented row (corrected after a misunderstanding: gallery previews faces, not sun-themes).
+- **Instrument follows the sun:** InstrumentDawn/Noon/Dusk palettes; theme row applies to both faces.
+- **Lock screen follows the light:** `WallpaperSync` renders face+theme as the lock wallpaper (FLAG_LOCK, normal SET_WALLPAPER permission); re-syncs on face/theme changes and at mode boundaries via existing alarms; change-guard signature; fails silently. Iterated: bolder motifs (lock screen zoom-crops edges + downsamples), glow as quadratic fade (a flat block read as a header), band full-bleed from the top edge (corner-radius clip seam).
+
+### Findings & Learnings
+
+- **Lock screens are hostile to wallpaper precision:** SystemUI zoom-crops the edges, downsamples (thin lines vanish), clips display corner radii, and dims everything with a keyguard scrim (no opt-out API; decided to accept, judge on real hardware before compensating).
+- The emulator AVD had **keyguard disabled** — waking went straight to the app; several "lock screen" test taps were actually landing on the keyguard once enabled (`locksettings set-disabled false`, `wm dismiss-keyguard` for scripted flows; screen must be awake before input).
+- `am start -W` reports TotalTime 0 for HOME activities — use the logcat `Displayed` line for cold-start numbers.
+- Release vs debug signature swaps require uninstall (INSTALL_FAILED_UPDATE_INCOMPATIBLE) — wipes local config; plan test order accordingly.
+- Product correction recorded: **confirm with the user before implementing** — the theme-gallery was built for sun-themes first when the intent was faces.
+
+### Next Steps
+
+- Human-side launch: D-U-N-S lookup, org Play Console account, store assets (512 icon, feature graphic, screenshots, privacy policy page).
+- TalkBack listening pass + a week of living with it on a real phone; check lock wallpaper crop/dim on real hardware.
+- Future editions ride the established shape: palettes × FaceVoice × home composable (+ wallpaper motif).
+
+---
+
 ## Entry 1 — 2026-07-09
 
 **Summary:** From an empty machine to a working launcher: environment setup and milestones M0–M7 built, verified on emulator, and pushed. Sundial is now a daily-usable home screen — themed modes, gestures, search, the breath ritual, full settings with persistence, appearance options, and both whispers (notification counts + weather).

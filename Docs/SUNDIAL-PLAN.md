@@ -362,9 +362,9 @@ justification text, versioning + signed AAB.
 - Adjustable mode hours (tappable spans in the day editor — UI slot exists).
 - Morning intention prompt (first unlock of the day asks "What's the one thing
   today?"; replaces static intention for that day).
-- **Sundial: Instrument** — the Swiss/grotesk edition (see
-  `sundial-two-faces.html`); first entry of a curated, one-at-a-time
-  editions system (possible paid unlocks — the monetization path).
+- ~~**Sundial: Instrument** — the Swiss/grotesk edition~~ **SHIPPED early —
+  see §9 addendum.** Further editions remain Later (possible paid unlocks —
+  the monetization path).
 - Drag-to-reorder apps within a mode.
 - System-wide grayscale helper (deep-link route; ADB `WRITE_SECURE_SETTINGS`
   power-user note).
@@ -386,3 +386,58 @@ editions.
   cleverness.
 - After each milestone: commit, brief changelog, install on emulator, and stop
   for human review before proceeding.
+
+---
+
+## 9. Addendum — shipped after v1 code-complete (2026-07-09)
+
+Product decisions made with the owner during/after M10; these supersede the
+sections above where they differ.
+
+### 9.1 Ritual button copy
+The ritual's affirmative button is **"Open"**, not the demo's "Open for
+10 min" — the time reference read like a lockout promise. The 10-minute
+quiet-skip window behaves exactly as §3.5 describes; it is simply
+unadvertised. (Deliberate deviation from the demo contract.)
+
+### 9.2 Faces — the editions system (v1 includes two)
+- A **Face** is a full identity: palettes × typography voice × home layout.
+  v1 ships **Signature** (default, the demo look) and **Instrument**
+  (`sundial-two-faces.html`, edition B: Space Grotesk + IBM Plex Mono,
+  instrument scale with a live day-fraction marker replacing the horizon,
+  numbered ruled rows, split mono footer, one accent — #E8501E — reserved
+  for live information).
+- **Faces are what users browse**: the Face row in Appearance opens a
+  gallery — a horizontal pager of live home miniatures (the user's real
+  apps, intention, clock, current sun-theme), tap to apply. More editions
+  slot into this gallery later.
+- **The voice reaches everywhere**: a `FaceVoice` composition local
+  (ceremonial / functional / meta families, italic posture, headline
+  weight) re-voices settings, the mode editor, search, the ritual, and
+  toasts. Onboarding keeps the Signature brand voice; the Paused screen
+  stays deliberately face-less.
+- **Both faces follow the sun**: Instrument has its own Dawn/Noon/Dusk
+  palettes (warm paper / the demo's cool light / dark ember). The Theme
+  control (Follow the sun / Dawn / Noon / Dusk) is the inline segmented
+  row in Appearance, §3.6.2 unchanged, and applies to whichever face is
+  active. The rhythm always follows time regardless (unchanged).
+
+### 9.3 The lock screen follows the light
+The lock-screen wallpaper (FLAG_LOCK; normal `SET_WALLPAPER` permission)
+always wears the current face + theme — no toggle. Signature renders the
+horizon band (full-bleed from the top edge, glow fading in slices) and
+wash; Instrument renders the tick scale. It re-syncs on face/theme change
+and at mode boundaries (the §3.2 alarms), guarded against redundant
+writes, failing silently. Known platform behavior, accepted: the keyguard
+dims all wallpapers (no opt-out), zoom-crops edges, and clips corner
+radii — motifs are drawn to survive this.
+
+### 9.4 Onboarding is the seeder
+Refinement of §3.9/M5: the onboarding picker seeds only modes that are
+still empty; pre-onboarding installs count as onboarded. There is no
+silent auto-seed.
+
+### 9.5 Play launch path
+Organization Play Console account via the owner's existing registered
+Swedish company (no 12-tester/14-day gate). Details and all listing/
+declaration texts: `Docs/PLAY-LISTING.md`.

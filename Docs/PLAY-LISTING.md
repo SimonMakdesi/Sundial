@@ -43,6 +43,13 @@ Product copy is in Sundial's voice: calm, no discipline-speak, no guilt.
 > **Whispers, not badges.** An optional quiet number next to an app's name
 > when something waits. No banners, no red.
 >
+> **Two faces.** Signature — the warm serif look — or Instrument, a
+> Swiss-style edition with ruled lines and a time scale. Browse them live,
+> wearing your own apps, and switch with a tap.
+>
+> **Seamless from the lock screen.** Your lock screen quietly wears the
+> same palette as your home, and shifts with the day too.
+>
 > **Private by design.** No account, no analytics, no tracking. Nothing
 > leaves your phone — with one optional exception: if you turn on the
 > weather whisper, Sundial fetches the temperature for a city you choose
@@ -91,6 +98,9 @@ Notes for reviewers / rationale:
 - `INTERNET` + `ACCESS_COARSE_LOCATION`: solely the optional weather
   whisper; off by default; zero use when off.
 - `RECEIVE_BOOT_COMPLETED`: reschedule the time-of-day alarms after boot.
+- `SET_WALLPAPER` (normal permission): keeps the lock-screen wallpaper in
+  step with the chosen face/theme. Rendered on-device from palette colors;
+  no images are read or uploaded.
 - Notification listener (`BIND_NOTIFICATION_LISTENER_SERVICE`): the
   optional notification counts; never required; the app is fully
   functional without it. Contents of notifications are never read beyond
