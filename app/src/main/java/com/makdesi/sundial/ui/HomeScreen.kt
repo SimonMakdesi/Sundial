@@ -3,8 +3,11 @@ package com.makdesi.sundial.ui
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,18 +26,24 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -42,9 +51,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.draw.drawWithContent
-import androidx.core.view.WindowCompat
 import com.makdesi.sundial.R
 import com.makdesi.sundial.data.AppEntry
 import com.makdesi.sundial.domain.Mode
@@ -52,9 +58,7 @@ import com.makdesi.sundial.theme.Grotesk
 import com.makdesi.sundial.theme.Motion
 import com.makdesi.sundial.theme.Palette
 import com.makdesi.sundial.theme.Serif
-import com.makdesi.sundial.theme.paletteFor
 import com.makdesi.sundial.theme.reducedMotion
-import kotlinx.coroutines.flow.StateFlow
 
 data class HomeState(
     val mode: Mode,
@@ -66,7 +70,7 @@ data class HomeState(
 )
 
 @Composable
-private fun Mode.label(): String = stringResource(
+fun Mode.label(): String = stringResource(
     when (this) {
         Mode.MORNING -> R.string.mode_morning
         Mode.DAY -> R.string.mode_day
@@ -76,7 +80,7 @@ private fun Mode.label(): String = stringResource(
 
 /** Crossfades every palette channel at the contract's timings (bg/ink 1.1s, horizon/wash 1.4s). */
 @Composable
-private fun animatedPalette(target: Palette): Palette {
+fun animatedPalette(target: Palette): Palette {
     val reduced = reducedMotion(LocalContext.current)
     val fast = if (reduced) Motion.NEAR_INSTANT_MS else Motion.PALETTE_MS
     val slow = if (reduced) Motion.NEAR_INSTANT_MS else Motion.HORIZON_MS
@@ -102,23 +106,71 @@ private fun animatedPalette(target: Palette): Palette {
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
-    homeFlow: StateFlow<HomeState>,
-    appsFlow: StateFlow<List<AppEntry>>,
+    palette: Palette,
+    home: HomeState,
+    apps: List<AppEntry>,
     onOpen: (AppEntry) -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenSearch: () -> Unit,
 ) {
-    val home by homeFlow.collectAsState()
-    val apps by appsFlow.collectAsState()
-    val palette = animatedPalette(paletteFor(home.mode))
+    // During a hold the content recedes slightly as tactile feedback (plan §3.3).
+    var holding by remember { mutableStateOf(false) }
+    val holdScale by animateFloatAsState(if (holding) .97f else 1f, tween(500), label = "holdS")
+    val holdAlpha by animateFloatAsState(if (holding) .75f else 1f, tween(500), label = "holdA")
 
-    val view = LocalView.current
-    SideEffect {
-        val window = (view.context as? android.app.Activity)?.window ?: return@SideEffect
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = palette.isLight
+    // Swipe up past the list's end also opens search — the sheet is reachable from anywhere.
+    val overscroll = remember {
+        object : NestedScrollConnection {
+            var accumulated = 0f
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                if (source == NestedScrollSource.UserInput && available.y < 0f) {
+                    accumulated += available.y
+                    if (accumulated < -120f) {
+                        accumulated = 0f
+                        onOpenSearch()
+                    }
+                } else if (available.y > 0f) {
+                    accumulated = 0f
+                }
+                return Offset.Zero
+            }
+        }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(palette.bg)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(palette.bg)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        holding = true
+                        tryAwaitRelease()
+                        holding = false
+                    },
+                    onLongPress = {
+                        holding = false
+                        onOpenSettings()
+                    },
+                )
+            }
+            .pointerInput(Unit) {
+                var dragged = 0f
+                detectVerticalDragGestures(
+                    onDragStart = { dragged = 0f },
+                    onVerticalDrag = { _, delta ->
+                        dragged += delta
+                        if (dragged < -48.dp.toPx()) {
+                            dragged = 0f
+                            onOpenSearch()
+                        }
+                    },
+                )
+            },
+    ) {
         // wash: the horizon's bleed down the screen
         Box(
             modifier = Modifier
@@ -141,7 +193,10 @@ fun HomeScreen(
         )
 
         Box(
-            modifier = Modifier.fillMaxSize().safeDrawingPadding(),
+            modifier = Modifier
+                .fillMaxSize()
+                .safeDrawingPadding()
+                .graphicsLayer(scaleX = holdScale, scaleY = holdScale, alpha = holdAlpha),
             contentAlignment = Alignment.TopCenter,
         ) {
             Column(
@@ -187,6 +242,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .weight(1f)
                         .padding(top = 22.dp)
+                        .nestedScroll(overscroll)
                         .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                         .drawWithContent {
                             drawContent()
@@ -197,7 +253,7 @@ fun HomeScreen(
                                     1f - 18f / size.height to Color.Black,
                                     1f to Color.Transparent,
                                 ),
-                                blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
+                                blendMode = BlendMode.DstIn,
                             )
                         },
                 ) {
@@ -212,7 +268,10 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 48.dp)
-                                .clickable { onOpen(app) }
+                                .combinedClickable(
+                                    onClick = { onOpen(app) },
+                                    onLongClick = onOpenSettings,
+                                )
                                 .padding(vertical = 9.dp),
                         )
                     }

@@ -14,8 +14,8 @@ import com.makdesi.sundial.data.AppRepository
 import com.makdesi.sundial.domain.Mode
 import com.makdesi.sundial.domain.ModeEngine
 import com.makdesi.sundial.system.AlarmScheduler
-import com.makdesi.sundial.ui.HomeScreen
 import com.makdesi.sundial.ui.HomeState
+import com.makdesi.sundial.ui.SundialRoot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flow
@@ -81,11 +81,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         AlarmScheduler.scheduleNext(this)
         setContent {
-            HomeScreen(
-                homeFlow = viewModel.home,
-                appsFlow = viewModel.apps,
-                onOpen = viewModel::open,
-            )
+            SundialRoot(viewModel)
         }
     }
 }
