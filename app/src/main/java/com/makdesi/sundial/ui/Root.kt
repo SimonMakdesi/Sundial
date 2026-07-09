@@ -66,7 +66,12 @@ fun SundialRoot(viewModel: SundialViewModel) {
     var editMode by remember { mutableStateOf(com.makdesi.sundial.domain.Mode.MORNING) }
     var searchOpen by remember { mutableStateOf(false) }
 
+    val weatherState by viewModel.weather.state.collectAsState()
+
     val context = LocalContext.current
+    val whispersOn = remember(layer) {
+        com.makdesi.sundial.data.NotificationWhisperService.isEnabled(context)
+    }
     val isDefaultLauncher = remember(layer) {
         val intent = android.content.Intent(android.content.Intent.ACTION_MAIN)
             .addCategory(android.content.Intent.CATEGORY_HOME)
@@ -122,6 +127,8 @@ fun SundialRoot(viewModel: SundialViewModel) {
                     palette = palette,
                     daySettings = daySettings,
                     appearance = appearance,
+                    weather = weatherState,
+                    whispersOn = whispersOn,
                     installedApps = apps,
                     isDefaultLauncher = isDefaultLauncher,
                     onEditMode = {
@@ -130,6 +137,10 @@ fun SundialRoot(viewModel: SundialViewModel) {
                     },
                     onTheme = viewModel::setTheme,
                     onAlign = viewModel::setAlign,
+                    onEnableWeather = viewModel::enableWeather,
+                    onDisableWeather = viewModel::disableWeather,
+                    onSearchCities = { viewModel.weather.searchCities(it) },
+                    onSetCity = { viewModel.weather.setCity(it) },
                     onDone = { layer = Layer.HOME },
                 )
                 Layer.EDIT -> ModeEditor(

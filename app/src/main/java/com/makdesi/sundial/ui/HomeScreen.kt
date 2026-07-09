@@ -74,6 +74,7 @@ data class HomeState(
     val intention: String,
     val asleepCount: Int,
     val awakePackages: Set<String>,
+    val counts: Map<String, Int>,
 )
 
 @Composable
@@ -320,11 +321,10 @@ fun HomeScreen(
                                 .padding(vertical = 9.dp),
                         ) {
                             val flagged = app.packageName in ritualFlags
-                            if (right && flagged) {
-                                Box(Modifier.size(5.dp).background(palette.faint, CircleShape))
-                                Spacer(Modifier.width(10.dp))
-                            }
-                            Text(
+                            val count = home.counts[app.packageName]?.takeIf { it > 0 }
+
+                            @Composable
+                            fun name() = Text(
                                 text = app.label.lowercase(),
                                 fontFamily = Grotesk,
                                 fontWeight = FontWeight.Medium,
@@ -332,9 +332,32 @@ fun HomeScreen(
                                 letterSpacing = 0.01.em,
                                 color = palette.ink,
                             )
-                            if (!right && flagged) {
-                                Spacer(Modifier.width(10.dp))
-                                Box(Modifier.size(5.dp).background(palette.faint, CircleShape))
+
+                            @Composable
+                            fun whispers() {
+                                count?.let {
+                                    Spacer(Modifier.width(10.dp))
+                                    Text(
+                                        text = it.toString(),
+                                        fontFamily = Grotesk,
+                                        fontSize = 12.sp,
+                                        letterSpacing = 0.03.em,
+                                        color = palette.faint,
+                                    )
+                                }
+                                if (flagged) {
+                                    Spacer(Modifier.width(10.dp))
+                                    Box(Modifier.size(5.dp).background(palette.faint, CircleShape))
+                                }
+                            }
+
+                            if (right) {
+                                whispers()
+                                if (count != null || flagged) Spacer(Modifier.width(10.dp))
+                                name()
+                            } else {
+                                name()
+                                whispers()
                             }
                         }
                     }

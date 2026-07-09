@@ -20,6 +20,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -37,6 +40,8 @@ import com.makdesi.sundial.data.Appearance
 import com.makdesi.sundial.data.ModeConfig
 import com.makdesi.sundial.data.Side
 import com.makdesi.sundial.data.ThemeChoice
+import com.makdesi.sundial.data.WeatherCity
+import com.makdesi.sundial.data.WeatherState
 import com.makdesi.sundial.domain.Mode
 import com.makdesi.sundial.theme.Grotesk
 import com.makdesi.sundial.theme.Palette
@@ -49,11 +54,17 @@ fun SettingsScreen(
     palette: Palette,
     daySettings: Map<Mode, ModeConfig>,
     appearance: Appearance,
+    weather: WeatherState,
+    whispersOn: Boolean,
     installedApps: List<AppEntry>,
     isDefaultLauncher: Boolean,
     onEditMode: (Mode) -> Unit,
     onTheme: (ThemeChoice) -> Unit,
     onAlign: (Side) -> Unit,
+    onEnableWeather: (locationGranted: Boolean) -> Unit,
+    onDisableWeather: () -> Unit,
+    onSearchCities: suspend (String) -> List<WeatherCity>,
+    onSetCity: (WeatherCity) -> Unit,
     onDone: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -159,36 +170,155 @@ fun SettingsScreen(
 
                 SectionLabel(stringResource(R.string.settings_system), palette)
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
-                        }
-                        .padding(vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.settings_default_launcher),
-                        fontFamily = Grotesk,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 15.sp,
-                        color = palette.ink,
-                    )
-                    Text(
-                        text = stringResource(
-                            if (isDefaultLauncher) R.string.settings_default_yes
-                            else R.string.settings_default_no
-                        ),
-                        fontFamily = Grotesk,
-                        fontSize = 11.5.sp,
-                        letterSpacing = 0.05.em,
-                        color = palette.faint,
-                    )
-                }
-                Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
+                SystemRow(
+                    palette = palette,
+                    label = stringResource(R.string.settings_default_launcher),
+                    status = stringResource(
+                        if (isDefaultLauncher) R.string.settings_default_yes
+                        else R.string.settings_default_no
+                    ),
+                    onClick = { context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS)) },
+                )
+
+                SystemRow(
+                    palette = palette,
+                    label = stringResource(R.string.settings_whispers),
+                    status = stringResource(
+                        if (whispersOn) R.string.settings_on else R.string.settings_off
+                    ),
+                    onClick = {
+                        context.startActivity(
+                            Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                        )
+                    },
+                )
+
+                WeatherRow(
+                    palette = palette,
+                    weather = weather,
+                    onEnableWeather = onEnableWeather,
+                    onDisableWeather = onDisableWeather,
+                    onSearchCities = onSearchCities,
+                    onSetCity = onSetCity,
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun SystemRow(
+    palette: Palette,
+    label: String,
+    status: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            fontFamily = Grotesk,
+            fontWeight = FontWeight.Medium,
+            fontSize = 15.sp,
+            color = palette.ink,
+        )
+        Text(
+            text = status,
+            fontFamily = Grotesk,
+            fontSize = 11.5.sp,
+            letterSpacing = 0.05.em,
+            color = palette.faint,
+        )
+    }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
+}
+
+@Composable
+private fun WeatherRow(
+    palette: Palette,
+    weather: WeatherState,
+    onEnableWeather: (Boolean) -> Unit,
+    onDisableWeather: () -> Unit,
+    onSearchCities: suspend (String) -> List<WeatherCity>,
+    onSetCity: (WeatherCity) -> Unit,
+) {
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted -> onEnableWeather(granted) }
+
+    SystemRow(
+        palette = palette,
+        label = stringResource(R.string.settings_weather),
+        status = if (weather.enabled) {
+            weather.cityName.ifEmpty { stringResource(R.string.settings_on) }
+        } else stringResource(R.string.settings_off),
+        onClick = {
+            if (weather.enabled) onDisableWeather()
+            else permissionLauncher.launch(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+        },
+    )
+
+    if (weather.enabled) {
+        var query by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+        var results by androidx.compose.runtime.remember {
+            androidx.compose.runtime.mutableStateOf(emptyList<WeatherCity>())
+        }
+        androidx.compose.runtime.LaunchedEffect(query) {
+            kotlinx.coroutines.delay(300)
+            results = if (query.isBlank()) emptyList() else onSearchCities(query)
+        }
+
+        androidx.compose.foundation.text.BasicTextField(
+            value = query,
+            onValueChange = { query = it },
+            singleLine = true,
+            textStyle = androidx.compose.ui.text.TextStyle(
+                fontFamily = Grotesk,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                color = palette.ink,
+            ),
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(palette.ink),
+            decorationBox = { inner ->
+                Column {
+                    Box(Modifier.padding(vertical = 10.dp)) {
+                        if (query.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.settings_city_hint),
+                                fontFamily = Grotesk,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 14.sp,
+                                color = palette.faint.copy(alpha = palette.faint.alpha * .6f),
+                            )
+                        }
+                        inner()
+                    }
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        results.forEach { city ->
+            Text(
+                text = "${city.name} — ${city.country}",
+                fontFamily = Grotesk,
+                fontSize = 13.sp,
+                color = palette.faint,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        onSetCity(city)
+                        query = ""
+                        results = emptyList()
+                    }
+                    .padding(vertical = 10.dp),
+            )
         }
     }
 }

@@ -13,6 +13,9 @@ import com.makdesi.sundial.data.AppEntry
 import com.makdesi.sundial.data.AppRepository
 import com.makdesi.sundial.data.DayRepository
 import com.makdesi.sundial.data.ModeConfig
+import com.makdesi.sundial.data.NotificationWhisperService
+import com.makdesi.sundial.data.WeatherCity
+import com.makdesi.sundial.data.WeatherRepository
 import com.makdesi.sundial.domain.Mode
 import com.makdesi.sundial.domain.ModeEngine
 import com.makdesi.sundial.domain.RitualGate
@@ -47,6 +50,7 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
     private val repository = AppRepository(application, viewModelScope)
     private val ritualGate = RitualGate(application, viewModelScope)
     val day = DayRepository(application, viewModelScope)
+    val weather = WeatherRepository(application, viewModelScope)
 
     val apps = repository.apps
     val ritualFlags = ritualGate.flags
@@ -75,9 +79,14 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private val clock = merge(minuteTicker, ModeEngine.events).map { buildClockState() }
+    private val clock = merge(minuteTicker, ModeEngine.events).map {
+        weather.maybeFetch() // throttled internally; no-op (zero network) when weather is off
+        buildClockState()
+    }
 
-    val home = combine(clock, apps, daySettings) { clock, installed, day ->
+    val home = combine(
+        clock, apps, daySettings, NotificationWhisperService.counts, weather.state,
+    ) { clock, installed, day, counts, weatherState ->
         val config = day[clock.mode] ?: ModeConfig()
         val byPackage = installed.associateBy { it.packageName }
         val modeApps = config.apps.mapNotNull { byPackage[it] }
@@ -85,13 +94,15 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
             mode = clock.mode,
             time = clock.time,
             meridiem = clock.meridiem,
-            dateline = clock.dateline,
+            dateline = clock.dateline +
+                (weatherState.temperature?.let { " · $it" } ?: ""),
             nextMode = clock.nextMode,
             nextModeAt = clock.nextModeAt,
             modeApps = modeApps,
             intention = config.intention,
             asleepCount = installed.size - modeApps.size,
             awakePackages = modeApps.map { it.packageName }.toSet(),
+            counts = counts,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initialHomeState())
 
@@ -101,6 +112,7 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
             mode = c.mode, time = c.time, meridiem = c.meridiem, dateline = c.dateline,
             nextMode = c.nextMode, nextModeAt = c.nextModeAt,
             modeApps = emptyList(), intention = "", asleepCount = 0, awakePackages = emptySet(),
+            counts = emptyMap(),
         )
     }
 
@@ -157,6 +169,43 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
     fun setTheme(theme: com.makdesi.sundial.data.ThemeChoice) = day.setTheme(theme)
 
     fun setAlign(align: com.makdesi.sundial.data.Side) = day.setAlign(align)
+
+    /**
+     * The location ladder (plan §3.8): granted → nearest city via last known
+     * coarse location; declined or unavailable → pre-fill from the timezone.
+     * The result is always visible and editable in settings — self-correcting.
+     */
+    fun enableWeather(locationGranted: Boolean) {
+        weather.setEnabled(true)
+        viewModelScope.launch {
+            if (weather.state.value.cityName.isNotEmpty()) return@launch // keep the chosen city
+            val app = getApplication<Application>()
+            var city: WeatherCity? = null
+            if (locationGranted) {
+                city = runCatching {
+                    val lm = app.getSystemService(android.location.LocationManager::class.java)
+                    val location = lm.getLastKnownLocation(android.location.LocationManager.PASSIVE_PROVIDER)
+                        ?: lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                    location?.let {
+                        @Suppress("DEPRECATION")
+                        val address = android.location.Geocoder(app)
+                            .getFromLocation(it.latitude, it.longitude, 1)?.firstOrNull()
+                        address?.locality?.let { name ->
+                            WeatherCity(name, address.countryName ?: "", it.latitude, it.longitude)
+                        }
+                    }
+                }.getOrNull()
+            }
+            if (city == null) {
+                val timezoneCity = java.util.TimeZone.getDefault().id
+                    .substringAfterLast('/').replace('_', ' ')
+                city = weather.searchCities(timezoneCity).firstOrNull()
+            }
+            city?.let { weather.setCity(it) }
+        }
+    }
+
+    fun disableWeather() = weather.setEnabled(false)
 
     override fun onCleared() {
         repository.dispose()

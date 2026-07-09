@@ -23,6 +23,11 @@
     <string name="align_right">Right</string>
     <string name="settings_system">System</string>
     <string name="settings_default_launcher">Default launcher</string>
+    <string name="settings_whispers">Notification whispers</string>
+    <string name="settings_weather">Weather</string>
+    <string name="settings_on">on</string>
+    <string name="settings_off">off</string>
+    <string name="settings_city_hint">Search for a city…</string>
     <string name="settings_default_yes">Sundial ✓</string>
     <string name="settings_default_no">not set — tap to choose</string>
     <string name="mode_card_empty">No apps yet — tap to choose.</string>
