@@ -12,6 +12,15 @@
     <string name="settings_title">Your day</string>
     <string name="settings_done">Done</string>
     <string name="settings_your_modes">Your modes</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_sun">Follow the sun</string>
+    <string name="theme_dawn">Dawn</string>
+    <string name="theme_noon">Noon</string>
+    <string name="theme_dusk">Dusk</string>
+    <string name="settings_alignment">Alignment</string>
+    <string name="align_left">Left</string>
+    <string name="align_right">Right</string>
     <string name="settings_system">System</string>
     <string name="settings_default_launcher">Default launcher</string>
     <string name="settings_default_yes">Sundial ✓</string>

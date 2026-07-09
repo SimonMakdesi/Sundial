@@ -2,6 +2,7 @@ package com.makdesi.sundial.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -59,9 +60,11 @@ fun SearchSheet(
     apps: List<AppEntry>,
     ritualFlags: Set<String>,
     awakePackages: Set<String>,
+    align: com.makdesi.sundial.data.Side,
     onOpen: (AppEntry) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val right = align == com.makdesi.sundial.data.Side.RIGHT
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var query by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
@@ -97,6 +100,7 @@ fun SearchSheet(
                     fontWeight = FontWeight.Medium,
                     fontSize = 15.sp,
                     color = palette.ink,
+                    textAlign = if (right) TextAlign.End else TextAlign.Start,
                 ),
                 cursorBrush = SolidColor(palette.ink),
                 decorationBox = { inner ->
@@ -139,9 +143,15 @@ fun SearchSheet(
                         Column(Modifier.clickable { onOpen(app) }) {
                             Row(
                                 verticalAlignment = Alignment.Bottom,
+                                horizontalArrangement = if (right) Arrangement.End
+                                else Arrangement.Start,
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 11.dp),
                             ) {
-                                Text(
+                                val asleep = app.packageName !in awakePackages
+                                val flagged = app.packageName in ritualFlags
+
+                                @Composable
+                                fun name() = Text(
                                     text = app.label.lowercase(),
                                     fontFamily = Grotesk,
                                     fontWeight = FontWeight.Medium,
@@ -149,24 +159,37 @@ fun SearchSheet(
                                     letterSpacing = 0.01.em,
                                     color = palette.ink,
                                 )
-                                if (app.packageName !in awakePackages) {
-                                    Spacer(Modifier.width(10.dp))
-                                    Text(
-                                        text = stringResource(R.string.search_asleep),
-                                        fontFamily = Grotesk,
-                                        fontSize = 12.sp,
-                                        letterSpacing = 0.03.em,
-                                        color = palette.faint,
-                                    )
+
+                                @Composable
+                                fun notes() {
+                                    if (asleep) {
+                                        Spacer(Modifier.width(10.dp))
+                                        Text(
+                                            text = stringResource(R.string.search_asleep),
+                                            fontFamily = Grotesk,
+                                            fontSize = 12.sp,
+                                            letterSpacing = 0.03.em,
+                                            color = palette.faint,
+                                        )
+                                    }
+                                    if (flagged) {
+                                        Spacer(Modifier.width(10.dp))
+                                        Box(
+                                            Modifier
+                                                .size(5.dp)
+                                                .align(Alignment.CenterVertically)
+                                                .background(palette.faint, CircleShape),
+                                        )
+                                    }
                                 }
-                                if (app.packageName in ritualFlags) {
-                                    Spacer(Modifier.width(10.dp))
-                                    Box(
-                                        Modifier
-                                            .size(5.dp)
-                                            .align(Alignment.CenterVertically)
-                                            .background(palette.faint, CircleShape),
-                                    )
+
+                                if (right) {
+                                    notes()
+                                    if (asleep || flagged) Spacer(Modifier.width(10.dp))
+                                    name()
+                                } else {
+                                    name()
+                                    notes()
                                 }
                             }
                             Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))

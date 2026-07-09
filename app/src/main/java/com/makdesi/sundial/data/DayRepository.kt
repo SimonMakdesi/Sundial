@@ -18,6 +18,17 @@ data class ModeConfig(
     val intention: String = "",
 )
 
+/** Theme: follow the sun, or lock one palette. Rhythm always follows time. */
+enum class ThemeChoice { SUN, DAWN, NOON, DUSK }
+
+/** Home/search mirroring for one-handed reach. */
+enum class Side { LEFT, RIGHT }
+
+data class Appearance(
+    val theme: ThemeChoice = ThemeChoice.SUN,
+    val align: Side = Side.LEFT,
+)
+
 /**
  * Per-mode app lists and intentions, persisted in DataStore (plan §3.6).
  * Lists are stored as ordered comma-joined strings — order of addition is the
@@ -28,6 +39,31 @@ class DayRepository(private val context: Context, private val scope: CoroutineSc
     private fun appsKey(mode: Mode) = stringPreferencesKey("apps_${mode.name.lowercase()}")
     private fun intentionKey(mode: Mode) = stringPreferencesKey("intention_${mode.name.lowercase()}")
     private val seededKey = booleanPreferencesKey("seeded")
+    private val themeKey = stringPreferencesKey("theme")
+    private val alignKey = stringPreferencesKey("align")
+
+    val appearance: StateFlow<Appearance> = context.sundialDataStore.data
+        .map { prefs ->
+            Appearance(
+                theme = prefs[themeKey]?.let { runCatching { ThemeChoice.valueOf(it) }.getOrNull() }
+                    ?: ThemeChoice.SUN,
+                align = prefs[alignKey]?.let { runCatching { Side.valueOf(it) }.getOrNull() }
+                    ?: Side.LEFT,
+            )
+        }
+        .stateIn(scope, SharingStarted.Eagerly, Appearance())
+
+    fun setTheme(theme: ThemeChoice) {
+        scope.launch {
+            context.sundialDataStore.edit { it[themeKey] = theme.name }
+        }
+    }
+
+    fun setAlign(align: Side) {
+        scope.launch {
+            context.sundialDataStore.edit { it[alignKey] = align.name }
+        }
+    }
 
     val settings: StateFlow<Map<Mode, ModeConfig>> = context.sundialDataStore.data
         .map { prefs ->

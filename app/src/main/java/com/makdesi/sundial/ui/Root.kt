@@ -48,9 +48,19 @@ fun SundialRoot(viewModel: SundialViewModel) {
     val home by viewModel.home.collectAsState()
     val apps by viewModel.apps.collectAsState()
     val daySettings by viewModel.daySettings.collectAsState()
+    val appearance by viewModel.appearance.collectAsState()
     val ritualFlags by viewModel.ritualFlags.collectAsState()
     val pendingRitual by viewModel.pendingRitual.collectAsState()
-    val palette = animatedPalette(paletteFor(home.mode))
+
+    // A fixed theme locks the palette; the rhythm (apps, intention, footer)
+    // keeps following the clock regardless (plan §3.6).
+    val paletteMode = when (appearance.theme) {
+        com.makdesi.sundial.data.ThemeChoice.SUN -> home.mode
+        com.makdesi.sundial.data.ThemeChoice.DAWN -> com.makdesi.sundial.domain.Mode.MORNING
+        com.makdesi.sundial.data.ThemeChoice.NOON -> com.makdesi.sundial.domain.Mode.DAY
+        com.makdesi.sundial.data.ThemeChoice.DUSK -> com.makdesi.sundial.domain.Mode.EVENING
+    }
+    val palette = animatedPalette(paletteFor(paletteMode))
 
     var layer by remember { mutableStateOf(Layer.HOME) }
     var editMode by remember { mutableStateOf(com.makdesi.sundial.domain.Mode.MORNING) }
@@ -103,6 +113,7 @@ fun SundialRoot(viewModel: SundialViewModel) {
                     palette = palette,
                     home = home,
                     ritualFlags = ritualFlags,
+                    align = appearance.align,
                     onOpen = viewModel::open,
                     onOpenSettings = { layer = Layer.SETTINGS },
                     onOpenSearch = { searchOpen = true },
@@ -110,12 +121,15 @@ fun SundialRoot(viewModel: SundialViewModel) {
                 Layer.SETTINGS -> SettingsScreen(
                     palette = palette,
                     daySettings = daySettings,
+                    appearance = appearance,
                     installedApps = apps,
                     isDefaultLauncher = isDefaultLauncher,
                     onEditMode = {
                         editMode = it
                         layer = Layer.EDIT
                     },
+                    onTheme = viewModel::setTheme,
+                    onAlign = viewModel::setAlign,
                     onDone = { layer = Layer.HOME },
                 )
                 Layer.EDIT -> ModeEditor(
@@ -143,6 +157,7 @@ fun SundialRoot(viewModel: SundialViewModel) {
                 apps = apps,
                 ritualFlags = ritualFlags,
                 awakePackages = home.awakePackages,
+                align = appearance.align,
                 onOpen = {
                     searchOpen = false
                     viewModel.open(it)

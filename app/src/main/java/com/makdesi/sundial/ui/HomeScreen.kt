@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -134,10 +135,12 @@ fun HomeScreen(
     palette: Palette,
     home: HomeState,
     ritualFlags: Set<String>,
+    align: com.makdesi.sundial.data.Side,
     onOpen: (AppEntry) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenSearch: () -> Unit,
 ) {
+    val right = align == com.makdesi.sundial.data.Side.RIGHT
     // During a hold the content recedes slightly as tactile feedback (plan §3.3).
     var holding by remember { mutableStateOf(false) }
     val holdScale by animateFloatAsState(if (holding) .97f else 1f, tween(500), label = "holdS")
@@ -226,6 +229,7 @@ fun HomeScreen(
                     .fillMaxSize()
                     .widthIn(max = 480.dp)
                     .padding(start = 32.dp, end = 32.dp, top = 44.dp, bottom = 10.dp),
+                horizontalAlignment = if (right) Alignment.End else Alignment.Start,
             ) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
@@ -270,7 +274,8 @@ fun HomeScreen(
                             fontSize = 15.sp,
                             lineHeight = 22.sp,
                             color = palette.ink,
-                            modifier = Modifier.padding(vertical = 14.dp),
+                            textAlign = if (right) TextAlign.End else TextAlign.Start,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
                         )
                         Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
                     }
@@ -304,6 +309,7 @@ fun HomeScreen(
                     items(home.modeApps, key = { it.packageName + "/" + it.activityClassName }) { app ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = if (right) Arrangement.End else Arrangement.Start,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 48.dp)
@@ -313,6 +319,11 @@ fun HomeScreen(
                                 )
                                 .padding(vertical = 9.dp),
                         ) {
+                            val flagged = app.packageName in ritualFlags
+                            if (right && flagged) {
+                                Box(Modifier.size(5.dp).background(palette.faint, CircleShape))
+                                Spacer(Modifier.width(10.dp))
+                            }
                             Text(
                                 text = app.label.lowercase(),
                                 fontFamily = Grotesk,
@@ -321,13 +332,9 @@ fun HomeScreen(
                                 letterSpacing = 0.01.em,
                                 color = palette.ink,
                             )
-                            if (app.packageName in ritualFlags) {
+                            if (!right && flagged) {
                                 Spacer(Modifier.width(10.dp))
-                                Box(
-                                    Modifier
-                                        .size(5.dp)
-                                        .background(palette.faint, CircleShape),
-                                )
+                                Box(Modifier.size(5.dp).background(palette.faint, CircleShape))
                             }
                         }
                     }

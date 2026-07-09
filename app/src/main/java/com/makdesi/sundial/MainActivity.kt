@@ -51,6 +51,7 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
     val apps = repository.apps
     val ritualFlags = ritualGate.flags
     val daySettings = day.settings
+    val appearance = day.appearance
 
     /** The app waiting behind the breath ritual, if any. */
     val pendingRitual = MutableStateFlow<AppEntry?>(null)
@@ -152,6 +153,10 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
     fun toggleModeApp(mode: Mode, packageName: String) = day.toggleApp(mode, packageName)
 
     fun setIntention(mode: Mode, text: String) = day.setIntention(mode, text)
+
+    fun setTheme(theme: com.makdesi.sundial.data.ThemeChoice) = day.setTheme(theme)
+
+    fun setAlign(align: com.makdesi.sundial.data.Side) = day.setAlign(align)
 
     override fun onCleared() {
         repository.dispose()
