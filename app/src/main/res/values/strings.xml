@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Sundial</string>
+    <string name="mode_morning">Morning</string>
+    <string name="mode_day">Day</string>
+    <string name="mode_evening">Evening</string>
+    <!-- e.g. "6 apps asleep · Day begins at 9:00" -->
+    <string name="footer_rhythm">%1$d apps asleep · %2$s begins at %3$s</string>
 </resources>
