@@ -151,13 +151,16 @@ fun SearchSheet(
                                 val flagged = app.packageName in ritualFlags
 
                                 @Composable
-                                fun name() = Text(
+                                fun androidx.compose.foundation.layout.RowScope.name() = Text(
                                     text = app.label.lowercase(),
                                     fontFamily = Grotesk,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 17.sp,
                                     letterSpacing = 0.01.em,
                                     color = palette.ink,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false),
                                 )
 
                                 @Composable

@@ -23,6 +23,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Debug-signed for local install until real release signing (M10).
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

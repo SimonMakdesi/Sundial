@@ -48,6 +48,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -227,8 +229,9 @@ fun HomeScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxHeight()
                     .widthIn(max = 480.dp)
+                    .fillMaxWidth()
                     .padding(start = 32.dp, end = 32.dp, top = 44.dp, bottom = 10.dp),
                 horizontalAlignment = if (right) Alignment.End else Alignment.Start,
             ) {
@@ -324,14 +327,19 @@ fun HomeScreen(
                             val count = home.counts[app.packageName]?.takeIf { it > 0 }
 
                             @Composable
-                            fun name() = Text(
+                            fun androidx.compose.foundation.layout.RowScope.name() = Text(
                                 text = app.label.lowercase(),
                                 fontFamily = Grotesk,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 19.sp,
                                 letterSpacing = 0.01.em,
                                 color = palette.ink,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false),
                             )
+
+                            val ritualDesc = stringResource(R.string.a11y_ritual_flagged)
 
                             @Composable
                             fun whispers() {
@@ -347,7 +355,12 @@ fun HomeScreen(
                                 }
                                 if (flagged) {
                                     Spacer(Modifier.width(10.dp))
-                                    Box(Modifier.size(5.dp).background(palette.faint, CircleShape))
+                                    Box(
+                                        Modifier
+                                            .size(5.dp)
+                                            .background(palette.faint, CircleShape)
+                                            .semantics { contentDescription = ritualDesc },
+                                    )
                                 }
                             }
 

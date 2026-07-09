@@ -60,4 +60,7 @@
     <string name="paused_msg">This is your phone without Sundial.</string>
     <string name="paused_resume">Resume Sundial</string>
     <string name="paused_change_launcher">Change default launcher</string>
+    <string name="a11y_ritual_flagged">asks for a breath before opening</string>
+    <string name="a11y_include">Include %1$s in this mode</string>
+    <string name="a11y_ritual_toggle">Breath ritual for %1$s</string>
 </resources>

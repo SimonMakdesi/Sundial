@@ -3,6 +3,7 @@ package com.makdesi.sundial.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -200,6 +204,8 @@ fun ModeEditor(
             LazyColumn(Modifier.padding(top = 4.dp)) {
                 items(results, key = { it.packageName + "/" + it.activityClassName }) { app ->
                     val included = app.packageName in config.apps
+                    val includeDesc = stringResource(R.string.a11y_include, app.label)
+                    val ritualDesc = stringResource(R.string.a11y_ritual_toggle, app.label)
                     Column {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -213,7 +219,12 @@ fun ModeEditor(
                                         if (included) Modifier.background(palette.ink, CircleShape)
                                         else Modifier.border(1.5.dp, palette.faint, CircleShape)
                                     )
-                                    .clickable { onToggleApp(app.packageName) },
+                                    .toggleable(
+                                        value = included,
+                                        role = Role.Checkbox,
+                                        onValueChange = { onToggleApp(app.packageName) },
+                                    )
+                                    .semantics { contentDescription = includeDesc },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 if (included) {
@@ -231,20 +242,28 @@ fun ModeEditor(
                                 fontSize = 15.sp,
                                 color = if (included) palette.ink
                                 else palette.ink.copy(alpha = .38f),
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                 modifier = Modifier
                                     .weight(1f)
                                     .clickable { onToggleApp(app.packageName) }
                                     .padding(horizontal = 12.dp),
                             )
                             // ☉: the global breath-ritual flag
+                            val ritualOn = app.packageName in ritualFlags
                             Text(
                                 text = "☉",
                                 fontFamily = Serif,
                                 fontSize = 15.sp,
-                                color = if (app.packageName in ritualFlags) palette.ink
+                                color = if (ritualOn) palette.ink
                                 else palette.faint.copy(alpha = palette.faint.alpha * .35f),
                                 modifier = Modifier
-                                    .clickable { onToggleRitual(app.packageName) }
+                                    .toggleable(
+                                        value = ritualOn,
+                                        role = Role.Switch,
+                                        onValueChange = { onToggleRitual(app.packageName) },
+                                    )
+                                    .semantics { contentDescription = ritualDesc }
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                             )
                         }
