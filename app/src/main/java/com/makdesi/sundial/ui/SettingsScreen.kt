@@ -61,9 +61,9 @@ fun SettingsScreen(
     installedApps: List<AppEntry>,
     isDefaultLauncher: Boolean,
     onEditMode: (Mode) -> Unit,
-    onOpenTheme: () -> Unit,
+    onTheme: (ThemeChoice) -> Unit,
     onAlign: (Side) -> Unit,
-    onFace: (Face) -> Unit,
+    onOpenFace: () -> Unit,
     onEnableWeather: (locationGranted: Boolean) -> Unit,
     onDisableWeather: () -> Unit,
     onSearchCities: suspend (String) -> List<WeatherCity>,
@@ -125,13 +125,22 @@ fun SettingsScreen(
 
                 SectionLabel(stringResource(R.string.settings_appearance), palette)
 
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+                // The faces are the real themes — a gallery of them lives behind this row.
+                SystemRow(
+                    palette = palette,
+                    label = stringResource(R.string.settings_face),
+                    status = stringResource(
+                        when (appearance.face) {
+                            Face.SIGNATURE -> R.string.face_signature
+                            Face.INSTRUMENT -> R.string.face_instrument
+                        }
+                    ),
+                    onClick = onOpenFace,
+                )
+
+                Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                     Text(
-                        text = stringResource(R.string.settings_face),
+                        text = stringResource(R.string.settings_theme),
                         fontFamily = LocalVoice.current.functional,
                         fontWeight = FontWeight.Medium,
                         fontSize = 15.sp,
@@ -140,28 +149,17 @@ fun SettingsScreen(
                     Segmented(
                         palette = palette,
                         options = listOf(
-                            Face.SIGNATURE to stringResource(R.string.face_signature),
-                            Face.INSTRUMENT to stringResource(R.string.face_instrument),
+                            ThemeChoice.SUN to stringResource(R.string.theme_sun),
+                            ThemeChoice.DAWN to stringResource(R.string.theme_dawn),
+                            ThemeChoice.NOON to stringResource(R.string.theme_noon),
+                            ThemeChoice.DUSK to stringResource(R.string.theme_dusk),
                         ),
-                        selected = appearance.face,
-                        onSelect = onFace,
+                        selected = appearance.theme,
+                        onSelect = onTheme,
+                        modifier = Modifier.padding(top = 10.dp),
                     )
                 }
                 Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
-
-                SystemRow(
-                    palette = palette,
-                    label = stringResource(R.string.settings_theme),
-                    status = stringResource(
-                        when (appearance.theme) {
-                            ThemeChoice.SUN -> R.string.theme_sun
-                            ThemeChoice.DAWN -> R.string.theme_dawn
-                            ThemeChoice.NOON -> R.string.theme_noon
-                            ThemeChoice.DUSK -> R.string.theme_dusk
-                        }
-                    ),
-                    onClick = onOpenTheme,
-                )
 
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),

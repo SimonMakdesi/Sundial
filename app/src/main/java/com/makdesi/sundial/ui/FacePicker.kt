@@ -46,19 +46,20 @@ import com.makdesi.sundial.theme.paletteFor
 import java.util.Locale
 
 /**
- * The theme gallery: swipe through live miniatures of your own home —
- * current apps, current face — wearing each theme. Tap one to live in it.
+ * The face gallery: the faces are the real themes. Swipe through live
+ * miniatures of your own home — current apps, intention, time, and the
+ * selected sun-theme — wearing each face. Tap one to live in it.
  */
 @Composable
-fun ThemePicker(
+fun FacePicker(
     palette: Palette,
-    face: Face,
-    current: ThemeChoice,
+    current: Face,
+    themeMode: com.makdesi.sundial.domain.Mode, // the theme's mode right now (sun-follow or lock)
     home: HomeState,
-    onPick: (ThemeChoice) -> Unit,
+    onPick: (Face) -> Unit,
     onBack: () -> Unit,
 ) {
-    val choices = ThemeChoice.entries
+    val choices = Face.entries
     val pagerState = rememberPagerState(
         initialPage = choices.indexOf(current).coerceAtLeast(0),
         pageCount = { choices.size },
@@ -78,7 +79,7 @@ fun ThemePicker(
             verticalAlignment = Alignment.Bottom,
         ) {
             Text(
-                text = stringResource(R.string.settings_theme),
+                text = stringResource(R.string.settings_face),
                 fontFamily = LocalVoice.current.ceremonial,
                 fontWeight = LocalVoice.current.titleWeight,
                 fontSize = 30.sp,
@@ -106,15 +107,10 @@ fun ThemePicker(
             modifier = Modifier.weight(1f).widthIn(max = 480.dp),
         ) { page ->
             val choice = choices[page]
-            val previewMode = when (choice) {
-                ThemeChoice.SUN -> home.mode
-                ThemeChoice.DAWN -> com.makdesi.sundial.domain.Mode.MORNING
-                ThemeChoice.NOON -> com.makdesi.sundial.domain.Mode.DAY
-                ThemeChoice.DUSK -> com.makdesi.sundial.domain.Mode.EVENING
+            val previewPalette = when (choice) {
+                Face.SIGNATURE -> paletteFor(themeMode)
+                Face.INSTRUMENT -> instrumentPaletteFor(themeMode)
             }
-            val previewPalette =
-                if (face == Face.INSTRUMENT) instrumentPaletteFor(previewMode)
-                else paletteFor(previewMode)
             val selected = choice == current
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -131,15 +127,13 @@ fun ThemePicker(
                         .clip(RoundedCornerShape(24.dp))
                         .clickable { onPick(choice) },
                 ) {
-                    HomeMiniature(previewPalette, face, home)
+                    HomeMiniature(previewPalette, choice, home)
                 }
                 Text(
                     text = stringResource(
                         when (choice) {
-                            ThemeChoice.SUN -> R.string.theme_sun
-                            ThemeChoice.DAWN -> R.string.theme_dawn
-                            ThemeChoice.NOON -> R.string.theme_noon
-                            ThemeChoice.DUSK -> R.string.theme_dusk
+                            Face.SIGNATURE -> R.string.face_signature
+                            Face.INSTRUMENT -> R.string.face_instrument
                         }
                     ) + if (selected) " ✓" else "",
                     fontFamily = LocalVoice.current.functional,

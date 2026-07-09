@@ -41,7 +41,7 @@ import com.makdesi.sundial.theme.paletteFor
 import com.makdesi.sundial.theme.reducedMotion
 import kotlinx.coroutines.delay
 
-private enum class Layer { HOME, SETTINGS, EDIT, THEME }
+private enum class Layer { HOME, SETTINGS, EDIT, FACE }
 
 @Composable
 fun SundialRoot(viewModel: SundialViewModel) {
@@ -189,9 +189,9 @@ fun SundialRoot(viewModel: SundialViewModel) {
                         editMode = it
                         layer = Layer.EDIT
                     },
-                    onOpenTheme = { layer = Layer.THEME },
+                    onTheme = viewModel::setTheme,
                     onAlign = viewModel::setAlign,
-                    onFace = viewModel::setFace,
+                    onOpenFace = { layer = Layer.FACE },
                     onEnableWeather = viewModel::enableWeather,
                     onDisableWeather = viewModel::disableWeather,
                     onSearchCities = { viewModel.weather.searchCities(it) },
@@ -202,13 +202,13 @@ fun SundialRoot(viewModel: SundialViewModel) {
                     },
                     onDone = { layer = Layer.HOME },
                 )
-                Layer.THEME -> ThemePicker(
+                Layer.FACE -> FacePicker(
                     palette = palette,
-                    face = appearance.face,
-                    current = appearance.theme,
+                    current = appearance.face,
+                    themeMode = paletteMode,
                     home = home,
                     onPick = {
-                        viewModel.setTheme(it)
+                        viewModel.setFace(it)
                         layer = Layer.SETTINGS
                     },
                     onBack = { layer = Layer.SETTINGS },
@@ -230,7 +230,7 @@ fun SundialRoot(viewModel: SundialViewModel) {
         // Back walks the layers home; Back on home does nothing (it's the home screen).
         BackHandler(enabled = layer != Layer.HOME) {
             layer = when (layer) {
-                Layer.EDIT, Layer.THEME -> Layer.SETTINGS
+                Layer.EDIT, Layer.FACE -> Layer.SETTINGS
                 else -> Layer.HOME
             }
         }
