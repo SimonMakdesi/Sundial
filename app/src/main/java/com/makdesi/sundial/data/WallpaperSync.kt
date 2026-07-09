@@ -47,7 +47,7 @@ object WallpaperSync {
             }
 
             // Skip the (not-free) wallpaper write when nothing changed.
-            val signature = "v6-${face.name}-${mode.name}"
+            val signature = "v7-${face.name}-${mode.name}"
             if (prefs[lastSetKey] == signature) return@withContext
 
             val palette = when (face) {
@@ -92,11 +92,12 @@ object WallpaperSync {
                 palette.horizonStops.toFloatArray(),
                 Shader.TileMode.CLAMP,
             )
-            // drawn below the top edge: lock screens zoom-crop the margins.
-            // The glow fades in slices — light bleeding, never a header block.
+            // The band runs from the very top edge (so corner clipping and
+            // zoom-crop land band-on-band, invisibly) and the glow fades in
+            // slices — light bleeding, never a header block.
             paint.shader = bandShader
-            val bandTop = h * 0.035f
-            val bandBottom = h * 0.048f
+            val bandTop = 0f
+            val bandBottom = h * 0.05f
             val glowEnd = h * 0.17f
             val slices = 24
             val sliceHeight = (glowEnd - bandBottom) / slices
