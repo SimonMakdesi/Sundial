@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sundial — two faces, side by side</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&family=Manrope:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  background: #0B0B0D;
+  font-family: 'Manrope', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  padding: 48px 24px;
+}
+
+.head { text-align: center; color: #8B8B90; max-width: 560px; }
+.head h1 { font-family: 'Fraunces', serif; font-weight: 300; font-size: 32px; color: #E8E6E1; }
+.head p { font-size: 13.5px; line-height: 1.6; margin-top: 10px; }
+
+.row { display: flex; gap: 56px; flex-wrap: wrap; justify-content: center; }
+
+.col { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.tag { font: 600 11px 'Manrope', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #77777C; }
+.tag b { color: #E8E6E1; font-weight: 700; }
+
+.phone {
+  position: relative; width: 330px; height: 680px;
+  border-radius: 50px; background: #1A1A1D; padding: 10px;
+  box-shadow: 0 0 0 1px #2E2E32, 0 40px 90px rgba(0,0,0,.6);
+}
+.island {
+  position: absolute; top: 23px; left: 50%; transform: translateX(-50%);
+  width: 92px; height: 25px; border-radius: 999px; background: #000; z-index: 5;
+}
+.screen {
+  width: 100%; height: 100%; border-radius: 40px; overflow: hidden;
+  position: relative; padding: 82px 32px 26px;
+  display: flex; flex-direction: column;
+}
+
+/* ================= A — SIGNATURE (warm) ================= */
+.warm { background: #EEF0F2; color: #23272C; }
+.warm .horizon {
+  position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(90deg,#F6C9A8 0%,#F2D9C0 30%,#CFE0EA 70%,#B9CFE2 100%);
+}
+.warm .horizon::after { content:''; position:absolute; inset:0; filter:blur(18px); background:inherit; opacity:.8; }
+.warm .clockrow { display: flex; align-items: baseline; gap: 8px; }
+.warm .clock { font-family:'Fraunces', serif; font-weight:300; font-size:72px; letter-spacing:-.02em; line-height:1; }
+.warm .mer { font-family:'Fraunces', serif; font-style:italic; font-weight:300; font-size:22px; color:rgba(35,39,44,.42); }
+.warm .dateline { font-size:12.5px; letter-spacing:.04em; margin-top:10px; color:rgba(35,39,44,.42); }
+.warm .intention {
+  font-family:'Fraunces', serif; font-style:italic; font-weight:300;
+  font-size:15px; line-height:1.5; padding:14px 0; margin-top:22px;
+  border-top:1px solid rgba(35,39,44,.12); border-bottom:1px solid rgba(35,39,44,.12);
+}
+.warm .apps { margin-top:28px; display:flex; flex-direction:column; gap:2px; flex:1; }
+.warm .app { display:flex; align-items:baseline; gap:10px; padding:9px 0; }
+.warm .app-name { font:500 19px 'Manrope', sans-serif; letter-spacing:.01em; }
+.warm .app-note { font-size:12px; letter-spacing:.03em; color:rgba(35,39,44,.42); }
+.warm .foot { font-size:11.5px; letter-spacing:.05em; text-align:center; color:rgba(35,39,44,.42); }
+.warm .handle { width:72px; height:4px; border-radius:999px; background:rgba(35,39,44,.12); margin:12px auto 0; }
+
+/* ================= B — INSTRUMENT (swiss) ================= */
+.swiss { background: #F1F1EF; color: #141517; font-family:'Space Grotesk', sans-serif; }
+/* time bar: segmented instrument scale instead of a soft horizon */
+.swiss .scale {
+  position:absolute; top:0; left:0; right:0; height:26px;
+  border-bottom:1px solid #141517;
+  display:flex; align-items:flex-end;
+}
+.swiss .scale i {
+  flex:1; height:6px; border-left:1px solid rgba(20,21,23,.35);
+}
+.swiss .scale i.major { height:12px; border-left:1.5px solid #141517; }
+.swiss .scale .marker {
+  position:absolute; bottom:-3.5px; left:29.5%;
+  width:7px; height:7px; border-radius:50%; background:#E8501E;
+}
+.swiss .clockrow { display:flex; align-items:baseline; gap:10px; margin-top:6px; }
+.swiss .clock { font-weight:700; font-size:68px; letter-spacing:-.04em; line-height:1; }
+.swiss .mer { font-family:'IBM Plex Mono', monospace; font-size:13px; color:rgba(20,21,23,.5); text-transform:uppercase; }
+.swiss .dateline {
+  font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:.08em;
+  text-transform:uppercase; margin-top:12px; color:rgba(20,21,23,.5);
+  display:flex; justify-content:space-between;
+}
+.swiss .intention {
+  font-size:13.5px; font-weight:500; line-height:1.5;
+  padding:12px 0; margin-top:20px;
+  border-top:1.5px solid #141517; border-bottom:1px solid rgba(20,21,23,.2);
+  text-transform:uppercase; letter-spacing:.04em;
+}
+.swiss .intention span { color:#E8501E; margin-right:8px; }
+.swiss .apps { margin-top:24px; display:flex; flex-direction:column; flex:1; }
+.swiss .app {
+  display:flex; align-items:baseline; gap:14px; padding:11px 0;
+  border-bottom:1px solid rgba(20,21,23,.14);
+}
+.swiss .idx { font-family:'IBM Plex Mono', monospace; font-size:10px; color:rgba(20,21,23,.4); }
+.swiss .app-name { font-weight:500; font-size:17px; letter-spacing:.01em; flex:1; }
+.swiss .app-note { font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.05em; color:rgba(20,21,23,.5); text-transform:uppercase; }
+.swiss .dot { width:5px; height:5px; border-radius:50%; background:#E8501E; align-self:center; }
+.swiss .foot {
+  font-family:'IBM Plex Mono', monospace; font-size:9.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:rgba(20,21,23,.5);
+  display:flex; justify-content:space-between;
+}
+.swiss .handle { width:64px; height:3px; background:#141517; margin:12px auto 0; }
+
+.note { max-width: 640px; text-align: center; color: #5E5E63; font-size: 12px; line-height: 1.7; }
+
+@media (max-width: 780px) { .row { gap: 36px; } }
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>Two faces of Sundial</h1>
+  <p>Same product, same morning, same apps — two identities. A is the signature warm look from the demo. B is the Swiss/instrumental alternative: grotesk-only, ruled lines, one functional accent color.</p>
+</div>
+
+<div class="row">
+  <!-- ================= A ================= -->
+  <div class="col">
+    <span class="tag"><b>A</b> · Signature — warm</span>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="screen warm">
+        <div class="horizon"></div>
+        <div class="clockrow"><span class="clock">7:04</span><span class="mer">am</span></div>
+        <div class="dateline">Wednesday, July 8 · 18°</div>
+        <div class="intention">One thing today: finish the sketch.</div>
+        <div class="apps">
+          <div class="app"><span class="app-name">journal</span></div>
+          <div class="app"><span class="app-name">weather</span></div>
+          <div class="app"><span class="app-name">messages</span><span class="app-note">2</span></div>
+          <div class="app"><span class="app-name">camera</span></div>
+          <div class="app"><span class="app-name">music</span></div>
+        </div>
+        <div class="foot">13 apps asleep · Day begins at 9:00</div>
+        <div class="handle"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= B ================= -->
+  <div class="col">
+    <span class="tag"><b>B</b> · Instrument — swiss</span>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="screen swiss">
+        <div class="scale">
+          <i></i><i></i><i class="major"></i><i></i><i></i><i class="major"></i><i></i><i></i>
+          <i class="major"></i><i></i><i></i><i class="major"></i><i></i><i></i><i class="major"></i>
+          <i></i><i></i><i class="major"></i><i></i><i></i><i class="major"></i><i></i><i></i><i></i>
+          <span class="marker"></span>
+        </div>
+        <div class="clockrow"><span class="clock">7:04</span><span class="mer">am</span></div>
+        <div class="dateline"><span>Wed 08 Jul</span><span>18°C</span><span>Morning</span></div>
+        <div class="intention"><span>—</span>One thing today: finish the sketch</div>
+        <div class="apps">
+          <div class="app"><span class="idx">01</span><span class="app-name">journal</span></div>
+          <div class="app"><span class="idx">02</span><span class="app-name">weather</span></div>
+          <div class="app"><span class="idx">03</span><span class="app-name">messages</span><span class="app-note">2 new</span></div>
+          <div class="app"><span class="idx">04</span><span class="app-name">camera</span></div>
+          <div class="app"><span class="idx">05</span><span class="app-name">music</span></div>
+        </div>
+        <div class="foot"><span>13 asleep</span><span>Day → 09:00</span></div>
+        <div class="handle"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="note">B replaces the horizon gradient with an instrument scale — the orange marker is the current time sliding along the day. Numbered rows, ruled dividers, mono-spaced metadata, one accent color used only for "live" information. Colder, sharper, more tool than companion.</p>
+
+</body>
+</html>

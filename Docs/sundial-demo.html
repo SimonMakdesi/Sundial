@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sundial — full product demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  min-height: 100vh;
+  background: #0B0B0D;
+  font-family: 'Manrope', system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 72px;
+  padding: 48px 32px;
+  flex-wrap: wrap;
+}
+
+/* ============ caption ============ */
+.caption { max-width: 320px; color: #8B8B90; }
+.cap-mark { font-size: 22px; color: #C97B3C; margin-bottom: 18px; }
+.cap-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: 44px; color: #E8E6E1; letter-spacing: -0.01em; }
+.cap-sub { font-family: 'Fraunces', serif; font-style: italic; font-weight: 300; font-size: 17px; color: #B9B6AF; margin: 10px 0 20px; }
+.gestures { display: flex; flex-direction: column; gap: 12px; margin-bottom: 26px; }
+.gesture { display: flex; gap: 12px; align-items: baseline; font-size: 13px; line-height: 1.5; }
+.g-key {
+  font-weight: 700; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: #C9C7C2; background: #1C1C20; border: 1px solid #2A2A2E;
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+}
+.mode-switch { display: flex; border: 1px solid #2A2A2E; border-radius: 999px; padding: 3px; width: fit-content; }
+.mode-btn {
+  border: 0; background: transparent; color: #77777C;
+  font: 600 12px 'Manrope', sans-serif; letter-spacing: .06em;
+  padding: 8px 16px; border-radius: 999px; cursor: pointer; transition: all .25s ease;
+}
+.mode-btn:hover { color: #C9C7C2; }
+.mode-btn.on { background: #E8E6E1; color: #0B0B0D; }
+.mode-btn:focus-visible { outline: 2px solid #C97B3C; outline-offset: 2px; }
+.cap-note { font-size: 11.5px; color: #5E5E63; margin-top: 12px; max-width: 280px; line-height: 1.5; }
+
+/* ============ phone ============ */
+.phone-wrap { position: relative; }
+.phone-glow {
+  position: absolute; inset: -60px; border-radius: 50%;
+  filter: blur(80px); opacity: .5; pointer-events: none;
+  transition: background 1.2s ease;
+}
+.phone {
+  position: relative; width: 350px; height: 720px;
+  border-radius: 52px; background: #1A1A1D; padding: 10px;
+  box-shadow: 0 0 0 1px #2E2E32, 0 40px 90px rgba(0,0,0,.6);
+}
+.island {
+  position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
+  width: 96px; height: 26px; border-radius: 999px; background: #000; z-index: 50;
+}
+.screen {
+  position: relative; width: 100%; height: 100%;
+  border-radius: 42px; overflow: hidden;
+  background: var(--bg); color: var(--ink);
+  transition: background 1.1s ease, color 1.1s ease;
+  user-select: none;
+}
+
+.horizon {
+  position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  background: var(--horizon); transition: background 1.4s ease; z-index: 40;
+}
+.horizon::after {
+  content: ''; position: absolute; inset: 0;
+  filter: blur(18px); background: inherit; opacity: .8;
+}
+.wash {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: var(--washH, 0%);
+  background: linear-gradient(180deg, var(--wash, transparent), transparent);
+  pointer-events: none; z-index: 1;
+  transition: height 1.4s ease, background 1.4s ease;
+}
+
+/* layers */
+.layer {
+  position: absolute; inset: 0; padding: 84px 32px 26px;
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none; transform: scale(.98);
+  transition: opacity .45s ease, transform .45s ease;
+}
+.layer.show { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+/* ============ HOME ============ */
+.clockrow { display: flex; align-items: baseline; gap: 8px; }
+.clock { font-family: 'Fraunces', serif; font-weight: 300; font-size: 72px; letter-spacing: -.02em; line-height: 1; }
+.meridiem { font-family: 'Fraunces', serif; font-style: italic; font-weight: 300; font-size: 22px; color: var(--faint); transition: color 1.1s ease; }
+.dateline { font-size: 12.5px; letter-spacing: .04em; margin-top: 10px; color: var(--faint); transition: color 1.1s ease; }
+.intention {
+  font-family: 'Fraunces', serif; font-style: italic; font-weight: 300;
+  font-size: 15px; line-height: 1.5; padding: 14px 0; margin-top: 22px;
+  border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair);
+  transition: border-color 1.1s ease; min-height: 20px;
+}
+.intention:empty { display: none; }
+.apps {
+  margin-top: 28px; display: flex; flex-direction: column; gap: 2px; flex: 1;
+  min-height: 0; overflow-y: auto; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 18px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 18px), transparent 100%);
+  padding: 6px 0;
+}
+.apps::-webkit-scrollbar { display: none; }
+.app { flex-shrink: 0; }
+.app {
+  display: flex; align-items: baseline; gap: 10px;
+  background: transparent; border: 0; cursor: pointer;
+  padding: 9px 0; text-align: left; color: var(--ink);
+  transition: opacity .3s ease, transform .3s ease;
+}
+.app:hover .app-name { opacity: .55; }
+.app.pressed { transform: translateX(6px); opacity: .5; }
+.app:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; border-radius: 4px; }
+.app-name { font: 500 19px 'Manrope', sans-serif; letter-spacing: .01em; transition: opacity .25s ease; }
+.app-note { font-size: 12px; letter-spacing: .03em; color: var(--faint); }
+.app-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--faint); align-self: center; }
+.foot { font-size: 11.5px; letter-spacing: .05em; text-align: center; color: var(--faint); transition: color 1.1s ease; }
+.handle {
+  width: 72px; height: 4px; border-radius: 999px;
+  background: var(--hair); margin: 12px auto 0;
+}
+
+/* alignment: right-handed reach */
+.screen.align-right .home-inner { text-align: right; }
+.screen.align-right .clockrow { justify-content: flex-end; }
+.screen.align-right .app { flex-direction: row-reverse; }
+.screen.align-right .app.pressed { transform: translateX(-6px); }
+.screen.align-right .sr-row { flex-direction: row-reverse; text-align: right; }
+.screen.align-right .search-input,
+.screen.align-right .sr-empty { text-align: right; }
+
+/* long-press feedback */
+.screen.holding .home-inner { transform: scale(.97); opacity: .75; }
+.home-inner { display: flex; flex-direction: column; flex: 1; transition: transform .5s ease, opacity .5s ease; }
+
+/* ============ SETTINGS (day editor) ============ */
+.set-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; }
+.set-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: 30px; }
+.txt-btn {
+  background: transparent; border: 0; cursor: pointer;
+  font: 600 12px 'Manrope', sans-serif; letter-spacing: .05em;
+  color: var(--faint); padding: 6px 0;
+}
+.txt-btn:hover { color: var(--ink); }
+.scroll { flex: 1; overflow-y: auto; margin: 0 -8px; padding: 0 8px 12px; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+
+.mode-card {
+  width: 100%; text-align: left; background: transparent;
+  border: 1px solid var(--hair); border-radius: 18px;
+  padding: 16px 18px; margin-bottom: 12px; cursor: pointer;
+  color: var(--ink); transition: border-color .25s ease, transform .15s ease;
+  position: relative;
+}
+.mode-card:hover { border-color: var(--faint); }
+.mode-card:active { transform: scale(.99); }
+.mc-band { position: absolute; top: 0; left: 18px; right: 18px; height: 2px; border-radius: 2px; opacity: .9; }
+.mc-row { display: flex; justify-content: space-between; align-items: baseline; }
+.mc-name { font-family: 'Fraunces', serif; font-weight: 400; font-size: 19px; }
+.mc-span { font-size: 11.5px; letter-spacing: .05em; color: var(--faint); }
+.mc-apps { font-size: 12.5px; line-height: 1.6; color: var(--faint); margin-top: 8px; }
+.mc-int { font-family: 'Fraunces', serif; font-style: italic; font-weight: 300; font-size: 13px; margin-top: 8px; }
+
+.set-section { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin: 26px 0 12px; }
+.set-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hair); }
+.set-row.stack { flex-direction: column; align-items: flex-start; gap: 10px; }
+.set-label { font-size: 15px; font-weight: 500; }
+.seg { display: flex; border: 1px solid var(--hair); border-radius: 999px; padding: 2px; }
+.seg button {
+  border: 0; background: transparent; color: var(--faint);
+  font: 600 10.5px 'Manrope', sans-serif; letter-spacing: .03em;
+  padding: 6px 10px; border-radius: 999px; cursor: pointer; transition: all .25s ease;
+}
+.seg button.on { background: var(--ink); color: var(--bg); }
+.danger-row { margin-top: 26px; }
+.pause-btn {
+  width: 100%; padding: 13px; border-radius: 999px;
+  border: 1px solid var(--hair); background: transparent;
+  color: var(--faint); font: 600 13px 'Manrope', sans-serif;
+  letter-spacing: .03em; cursor: pointer; transition: all .25s ease;
+}
+.pause-btn:hover { color: var(--ink); border-color: var(--faint); }
+
+/* ============ EDIT MODE ============ */
+.edit-span { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--faint); margin-bottom: 4px; }
+.int-input {
+  width: 100%; background: transparent; border: 0;
+  border-bottom: 1px solid var(--hair);
+  font-family: 'Fraunces', serif; font-style: italic; font-weight: 300;
+  font-size: 15px; color: var(--ink); padding: 10px 0; margin: 10px 0 4px;
+  outline: none; transition: border-color .25s ease;
+}
+.int-input:focus { border-color: var(--faint); }
+.int-input::placeholder { color: var(--faint); opacity: .6; }
+.search-input {
+  width: 100%; background: transparent; border: 0;
+  border-bottom: 1px solid var(--hair);
+  font: 500 15px 'Manrope', sans-serif; color: var(--ink);
+  padding: 10px 0; margin-bottom: 8px; outline: none;
+}
+.search-input::placeholder { color: var(--faint); opacity: .6; }
+.pick-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hair); }
+.pick-name { flex: 1; font-size: 15px; font-weight: 500; cursor: pointer; transition: opacity .2s ease; }
+.pick-row.off .pick-name { opacity: .38; }
+.breath-toggle {
+  background: transparent; border: 0; cursor: pointer;
+  font-size: 15px; color: var(--faint); opacity: .35;
+  transition: all .2s ease; padding: 2px 6px;
+  font-family: 'Fraunces', serif;
+}
+.breath-toggle.on { opacity: 1; color: var(--ink); }
+.check {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1.5px solid var(--faint); background: transparent;
+  cursor: pointer; position: relative; transition: all .2s ease; flex-shrink: 0;
+}
+.check.on { background: var(--ink); border-color: var(--ink); }
+.check.on::after {
+  content: ''; position: absolute; left: 6px; top: 3px;
+  width: 4px; height: 8px;
+  border: solid var(--bg); border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+.legend { font-size: 11px; color: var(--faint); margin: 10px 0 2px; line-height: 1.6; }
+.fullness {
+  font-family: 'Fraunces', serif; font-style: italic; font-weight: 300;
+  font-size: 12.5px; color: var(--faint); margin: 8px 0 2px;
+  animation: fadeIn .5s ease;
+}
+.fullness:empty { display: none; }
+
+/* ============ SEARCH SHEET ============ */
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; top: 18%;
+  background: var(--bg); border-radius: 32px 32px 42px 42px;
+  box-shadow: 0 -20px 60px rgba(0,0,0,.25);
+  padding: 18px 32px 26px;
+  transform: translateY(105%); transition: transform .5s cubic-bezier(.3,.9,.3,1);
+  display: flex; flex-direction: column; z-index: 45;
+  border-top: 1px solid var(--hair);
+}
+.sheet.show { transform: translateY(0); }
+.sheet .handle { margin: 0 auto 14px; }
+.search-results { flex: 1; overflow-y: auto; scrollbar-width: none; }
+.search-results::-webkit-scrollbar { display: none; }
+.sr-row {
+  display: flex; align-items: baseline; gap: 10px; width: 100%;
+  background: transparent; border: 0; color: var(--ink);
+  padding: 11px 0; cursor: pointer; text-align: left;
+  border-bottom: 1px solid var(--hair);
+}
+.sr-row:hover .app-name { opacity: .55; }
+.sr-row .app-name { font-size: 17px; }
+.sr-empty { font-size: 13px; color: var(--faint); text-align: center; padding: 30px 0; font-style: italic; font-family: 'Fraunces', serif; }
+
+/* ============ RITUAL ============ */
+.ritual {
+  position: absolute; inset: 0; z-index: 60;
+  background: var(--overlay);
+  backdrop-filter: blur(8px);
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 40px; padding: 40px; border-radius: 42px;
+  animation: fadeIn .5s ease;
+}
+.ritual.show { display: flex; }
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+.breath-wrap { height: 130px; display: flex; align-items: center; justify-content: center; }
+.breath {
+  width: 88px; height: 88px; border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  animation: breathe 3.6s ease-in-out infinite; opacity: .8;
+}
+@keyframes breathe {
+  0%,100% { transform: scale(1); opacity: .45 }
+  50% { transform: scale(1.32); opacity: .9 }
+}
+@media (prefers-reduced-motion: reduce) {
+  .breath { animation: none; }
+  * { transition-duration: .01s !important; }
+}
+.ritual-copy { text-align: center; min-height: 120px; }
+.ritual-line { font-family: 'Fraunces', serif; font-weight: 300; font-size: 22px; animation: fadeIn .6s ease; }
+.ritual-actions { display: none; flex-direction: column; gap: 10px; margin-top: 26px; animation: fadeIn .6s ease; }
+.ritual-actions.show { display: flex; }
+.r-btn {
+  font: 600 13.5px 'Manrope', sans-serif; letter-spacing: .02em;
+  padding: 13px 30px; border-radius: 999px; cursor: pointer;
+  transition: transform .15s ease;
+}
+.r-btn:hover { transform: scale(1.02); }
+.r-btn.ghost { background: transparent; border: 1px solid var(--hair); color: var(--ink); }
+.r-btn.solid { border: 0; background: var(--ink); color: var(--bg); }
+
+/* ============ PAUSED (normal phone) ============ */
+.paused {
+  position: absolute; inset: 0; z-index: 70; background: #101014;
+  display: none; flex-direction: column; padding: 90px 28px 30px;
+  border-radius: 42px; color: #C9C7C2;
+}
+.paused.show { display: flex; animation: fadeIn .4s ease; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 10px; flex: 1; align-content: start; }
+.gapp { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.gicon { width: 48px; height: 48px; border-radius: 13px; }
+.glabel { font-size: 9.5px; color: #86868C; }
+.paused-msg { font-family: 'Fraunces', serif; font-style: italic; font-weight: 300; font-size: 14px; text-align: center; color: #86868C; margin-bottom: 16px; }
+.resume-btn {
+  padding: 13px; border-radius: 999px; border: 0;
+  background: #E8E6E1; color: #101014;
+  font: 700 13px 'Manrope', sans-serif; letter-spacing: .03em; cursor: pointer;
+}
+
+/* ============ toast ============ */
+.toast {
+  position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+  font: 600 12px 'Manrope', sans-serif; letter-spacing: .03em;
+  padding: 10px 18px; border-radius: 999px; white-space: nowrap;
+  background: var(--ink); color: var(--bg);
+  z-index: 80; opacity: 0; transition: opacity .3s ease, transform .3s ease;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, -6px); }
+
+@media (max-width: 860px) {
+  body { gap: 40px; padding: 32px 16px; }
+  .caption { max-width: 350px; }
+}
+</style>
+</head>
+<body>
+
+<div class="caption">
+  <div class="cap-mark">☉</div>
+  <h1 class="cap-title">Sundial</h1>
+  <p class="cap-sub">A home screen that follows the light.</p>
+  <div class="gestures">
+    <div class="gesture"><span class="g-key">Tap</span><span>Open an app. Marked apps ask for one breath first.</span></div>
+    <div class="gesture"><span class="g-key">Swipe up</span><span>Find anything — even apps outside this hour. (Drag up on the phone.)</span></div>
+    <div class="gesture"><span class="g-key">Hold</span><span>Press and hold empty space to tend your day: modes, apps, theme.</span></div>
+  </div>
+  <div class="mode-switch" role="tablist" aria-label="Simulate time of day">
+    <button class="mode-btn on" data-mode="morning" role="tab" aria-selected="true">Morning</button>
+    <button class="mode-btn" data-mode="day" role="tab" aria-selected="false">Day</button>
+    <button class="mode-btn" data-mode="evening" role="tab" aria-selected="false">Evening</button>
+  </div>
+  <p class="cap-note">This switch simulates the clock. On a real phone, Sundial shifts on its own — unless a fixed theme (Dawn, Noon, Dusk) is chosen in settings.</p>
+</div>
+
+<div class="phone-wrap">
+  <div class="phone-glow" id="glow"></div>
+  <div class="phone">
+    <div class="island"></div>
+    <div class="screen" id="screen">
+      <div class="horizon"></div>
+      <div class="wash"></div>
+
+      <!-- HOME -->
+      <div class="layer show" id="homeLayer">
+        <div class="home-inner">
+          <div class="clockrow"><span class="clock" id="clock"></span><span class="meridiem" id="meridiem"></span></div>
+          <div class="dateline" id="dateline"></div>
+          <div class="intention" id="intention"></div>
+          <div class="apps" id="appList"></div>
+          <div class="foot" id="foot"></div>
+          <div class="handle"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS: the day editor -->
+      <div class="layer" id="settingsLayer">
+        <div class="set-head">
+          <span class="set-title">Your day</span>
+          <button class="txt-btn" id="closeSettings">Done</button>
+        </div>
+        <div class="scroll" id="settingsScroll"></div>
+      </div>
+
+      <!-- EDIT ONE MODE -->
+      <div class="layer" id="editLayer">
+        <div class="set-head">
+          <span class="set-title" id="editTitle"></span>
+          <button class="txt-btn" id="closeEdit">‹ Your day</button>
+        </div>
+        <div class="edit-span" id="editSpan"></div>
+        <input class="int-input" id="intInput" placeholder="Write an intention for this time…" maxlength="60">
+        <p class="legend">Tap a name to include it in this mode. The ☉ marks apps that ask for a breath before opening — everywhere, at any hour.</p>
+        <input class="search-input" id="pickSearch" placeholder="Search apps">
+        <div class="fullness" id="fullness"></div>
+        <div class="scroll" id="pickList"></div>
+      </div>
+
+      <!-- SEARCH SHEET -->
+      <div class="sheet" id="sheet">
+        <div class="handle"></div>
+        <input class="search-input" id="sheetSearch" placeholder="Type to find anything">
+        <div class="search-results" id="sheetResults"></div>
+      </div>
+
+      <!-- RITUAL -->
+      <div class="ritual" id="ritual">
+        <div class="breath-wrap"><div class="breath"></div></div>
+        <div class="ritual-copy">
+          <p class="ritual-line" id="ritualLine">Take one breath.</p>
+          <div class="ritual-actions" id="ritualActions">
+            <button class="r-btn ghost" id="ritualOpen">Open for 10 min</button>
+            <button class="r-btn solid" id="ritualClose">Not now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAUSED: phone without sundial -->
+      <div class="paused" id="paused">
+        <div class="grid" id="pauseGrid"></div>
+        <p class="paused-msg">This is your phone without Sundial.</p>
+        <button class="resume-btn" id="resumeBtn">Resume Sundial</button>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const APPS = {
+  journal:{}, weather:{}, messages:{note:'2'}, camera:{}, music:{},
+  calendar:{note:'3:00 review'}, mail:{note:'4'}, notes:{}, maps:{},
+  instagram:{ritual:true}, phone:{}, book:{note:'p. 142'}, photos:{},
+  browser:{}, podcasts:{}, banking:{}, youtube:{ritual:true}, clock:{}
+};
+
+const state = {
+  mode: 'morning',
+  theme: 'sun',          // 'sun' | 'morning' | 'day' | 'evening'
+  align: 'left',         // 'left' | 'right'
+  modes: {
+    morning: { name:'Morning', span:'6:00 – 9:00',  clock:'7:04', mer:'am', date:'Wednesday, July 8 · 18°',
+      intention:'One thing today: finish the sketch.',
+      apps:['journal','weather','messages','camera','music'] },
+    day:     { name:'Day',     span:'9:00 – 18:00', clock:'1:37', mer:'pm', date:'Wednesday, July 8 · 24°',
+      intention:'',
+      apps:['calendar','mail','notes','maps','instagram','phone'] },
+    evening: { name:'Evening', span:'18:00 – 6:00', clock:'9:52', mer:'pm', date:'Wednesday, July 8',
+      intention:'The rest can wait until morning.',
+      apps:['camera','messages','music','book'] }
+  }
+};
+
+const PALETTES = {
+  morning: { bg:'#F3EEE6', ink:'#2A2620', faint:'rgba(42,38,32,.44)', hair:'rgba(42,38,32,.13)',
+    horizon:'linear-gradient(90deg,#F4B98E 0%,#F2D3B0 35%,#D9E2E8 75%,#BFD2E0 100%)',
+    glow:'rgba(244,185,142,.4)', overlay:'rgba(243,238,230,.94)',
+    wash:'rgba(244,185,142,.26)', washH:'46%' },
+  day: { bg:'#F4F5F3', ink:'#1E2124', faint:'rgba(30,33,36,.42)', hair:'rgba(30,33,36,.12)',
+    horizon:'linear-gradient(90deg,#A8C8E8 0%,#C2D9EE 45%,#DCE9F4 100%)',
+    glow:'rgba(168,200,232,.35)', overlay:'rgba(244,245,243,.94)',
+    wash:'rgba(168,200,232,.10)', washH:'16%' },
+  evening: { bg:'#131216', ink:'#D9D3C8', faint:'rgba(217,211,200,.4)', hair:'rgba(217,211,200,.12)',
+    horizon:'linear-gradient(90deg,#2B2140 0%,#4A2E4E 45%,#93502F 85%,#C97B3C 100%)',
+    glow:'rgba(201,123,60,.28)', overlay:'rgba(19,18,22,.94)',
+    wash:'rgba(201,123,60,.13)', washH:'30%' }
+};
+
+const NEXT = { morning:['Day','9:00'], day:['Evening','18:00'], evening:['Morning','7:00 am'] };
+
+/* ================= EL ================= */
+const $ = id => document.getElementById(id);
+const screen = $('screen'), glow = $('glow');
+let editKey = null, toastTimer = null, ritualTimer = null, pendingApp = null;
+
+/* ================= RENDER ================= */
+function palette() {
+  return state.theme === 'sun' ? PALETTES[state.mode] : PALETTES[state.theme];
+}
+function applyPalette() {
+  const p = palette();
+  for (const k of ['bg','ink','faint','hair','horizon','overlay','wash','washH'])
+    screen.style.setProperty('--' + k, p[k]);
+  glow.style.background = p.glow;
+  screen.classList.toggle('align-right', state.align === 'right');
+}
+
+function renderHome() {
+  const m = state.modes[state.mode];
+  $('clock').textContent = m.clock;
+  $('meridiem').textContent = m.mer;
+  $('dateline').textContent = m.date;
+  $('intention').textContent = m.intention;
+  const list = $('appList'); list.innerHTML = '';
+  m.apps.forEach(name => {
+    const a = APPS[name];
+    const b = document.createElement('button');
+    b.className = 'app';
+    b.innerHTML = `<span class="app-name">${name}</span>`
+      + (a.note ? `<span class="app-note">${a.note}</span>` : '')
+      + (a.ritual ? `<span class="app-dot"></span>` : '');
+    b.addEventListener('pointerdown', e => e.stopPropagation());
+    b.addEventListener('click', () => launch(name, b));
+    list.appendChild(b);
+  });
+  const asleep = Object.keys(APPS).length - m.apps.length;
+  const [nn, nt] = NEXT[state.mode];
+  $('foot').textContent = `${asleep} apps asleep · ${nn} begins at ${nt}`;
+}
+
+function renderSettings() {
+  const s = $('settingsScroll'); s.innerHTML = '';
+  // --- mode cards ---
+  const sec1 = document.createElement('div');
+  sec1.innerHTML = `<div class="set-section" style="margin-top:0">Your modes</div>`;
+  s.appendChild(sec1);
+  for (const key of ['morning','day','evening']) {
+    const m = state.modes[key];
+    const c = document.createElement('button');
+    c.className = 'mode-card';
+    c.innerHTML = `
+      <div class="mc-band" style="background:${PALETTES[key].horizon}"></div>
+      <div class="mc-row"><span class="mc-name">${m.name}</span><span class="mc-span">${m.span}</span></div>
+      <div class="mc-apps">${m.apps.join(' · ')}</div>
+      ${m.intention ? `<div class="mc-int">“${m.intention}”</div>` : ''}`;
+    c.addEventListener('click', () => openEdit(key));
+    s.appendChild(c);
+  }
+  // --- appearance ---
+  const sec2 = document.createElement('div');
+  sec2.innerHTML = `<div class="set-section">Appearance</div>`;
+  s.appendChild(sec2);
+
+  const themeRow = document.createElement('div');
+  themeRow.className = 'set-row stack';
+  themeRow.innerHTML = `<span class="set-label">Theme</span>`;
+  const seg = document.createElement('div'); seg.className = 'seg';
+  [['sun','Follow the sun'],['morning','Dawn'],['day','Noon'],['evening','Dusk']].forEach(([v,l]) => {
+    const b = document.createElement('button');
+    b.textContent = l;
+    if (state.theme === v) b.classList.add('on');
+    b.addEventListener('click', () => { state.theme = v; applyPalette(); renderSettings(); });
+    seg.appendChild(b);
+  });
+  themeRow.appendChild(seg); s.appendChild(themeRow);
+
+  const alignRow = document.createElement('div');
+  alignRow.className = 'set-row';
+  alignRow.innerHTML = `<span class="set-label">Alignment</span>`;
+  const aseg = document.createElement('div'); aseg.className = 'seg';
+  [['left','Left'],['right','Right']].forEach(([v,l]) => {
+    const b = document.createElement('button');
+    b.textContent = l;
+    if (state.align === v) b.classList.add('on');
+    b.addEventListener('click', () => { state.align = v; applyPalette(); renderSettings(); });
+    aseg.appendChild(b);
+  });
+  alignRow.appendChild(aseg); s.appendChild(alignRow);
+
+  // --- system ---
+  const sec3 = document.createElement('div');
+  sec3.innerHTML = `<div class="set-section">System</div>`;
+  s.appendChild(sec3);
+  const def = document.createElement('div');
+  def.className = 'set-row';
+  def.innerHTML = `<span class="set-label">Default launcher</span><span class="mc-span">Sundial ✓</span>`;
+  s.appendChild(def);
+
+  const danger = document.createElement('div');
+  danger.className = 'danger-row';
+  const pb = document.createElement('button');
+  pb.className = 'pause-btn';
+  pb.textContent = 'Pause Sundial';
+  pb.addEventListener('click', showPaused);
+  danger.appendChild(pb); s.appendChild(danger);
+}
+
+function renderPicker() {
+  const q = $('pickSearch').value.trim().toLowerCase();
+  const list = $('pickList'); list.innerHTML = '';
+  const m = state.modes[editKey];
+  $('fullness').textContent = m.apps.length > 8
+    ? `${m.apps.length} apps — a screen this full stops being quiet.` : '';
+  Object.keys(APPS).sort()
+    .filter(n => n.includes(q))
+    .forEach(name => {
+      const inMode = m.apps.includes(name);
+      const row = document.createElement('div');
+      row.className = 'pick-row' + (inMode ? '' : ' off');
+
+      const chk = document.createElement('button');
+      chk.className = 'check' + (inMode ? ' on' : '');
+      chk.setAttribute('aria-label', `Include ${name}`);
+      const toggleInc = () => {
+        if (m.apps.includes(name)) m.apps = m.apps.filter(x => x !== name);
+        else m.apps.push(name);
+        renderPicker(); renderHome();
+      };
+      chk.addEventListener('click', toggleInc);
+
+      const nm = document.createElement('span');
+      nm.className = 'pick-name'; nm.textContent = name;
+      nm.addEventListener('click', toggleInc);
+
+      const br = document.createElement('button');
+      br.className = 'breath-toggle' + (APPS[name].ritual ? ' on' : '');
+      br.textContent = '☉';
+      br.setAttribute('aria-label', `Breath ritual for ${name}`);
+      br.addEventListener('click', () => { APPS[name].ritual = !APPS[name].ritual; renderPicker(); renderHome(); });
+
+      row.append(chk, nm, br);
+      list.appendChild(row);
+    });
+}
+
+function renderSheet() {
+  const q = $('sheetSearch').value.trim().toLowerCase();
+  const res = $('sheetResults'); res.innerHTML = '';
+  const inMode = state.modes[state.mode].apps;
+  const names = Object.keys(APPS).sort().filter(n => n.includes(q));
+  if (!names.length) {
+    res.innerHTML = `<div class="sr-empty">Nothing by that name.</div>`;
+    return;
+  }
+  names.forEach(name => {
+    const b = document.createElement('button');
+    b.className = 'sr-row';
+    b.innerHTML = `<span class="app-name">${name}</span>`
+      + (!inMode.includes(name) ? `<span class="app-note">asleep</span>` : '')
+      + (APPS[name].ritual ? `<span class="app-dot"></span>` : '');
+    b.addEventListener('click', () => { closeSheet(); launch(name, null); });
+    res.appendChild(b);
+  });
+}
+
+/* ================= ACTIONS ================= */
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function launch(name, btn) {
+  if (APPS[name].ritual) { openRitual(name); return; }
+  if (btn) {
+    btn.classList.add('pressed');
+    setTimeout(() => btn.classList.remove('pressed'), 350);
+  }
+  toast(`Opening ${name}`);
+}
+
+function openRitual(name) {
+  pendingApp = name;
+  $('ritualLine').textContent = 'Take one breath.';
+  $('ritualActions').classList.remove('show');
+  $('ritual').classList.add('show');
+  clearTimeout(ritualTimer);
+  ritualTimer = setTimeout(() => {
+    $('ritualLine').textContent = 'Still want in?';
+    $('ritualActions').classList.add('show');
+  }, 3400);
+}
+$('ritualOpen').addEventListener('click', () => {
+  $('ritual').classList.remove('show');
+  toast(`Opening ${pendingApp} — 10 min timer set`);
+});
+$('ritualClose').addEventListener('click', () => {
+  $('ritual').classList.remove('show');
+  toast('Good call.');
+});
+
+/* --- screens --- */
+function show(layer) {
+  ['homeLayer','settingsLayer','editLayer'].forEach(id =>
+    $(id).classList.toggle('show', id === layer));
+}
+function openSettings() { renderSettings(); show('settingsLayer'); }
+$('closeSettings').addEventListener('click', () => show('homeLayer'));
+
+function openEdit(key) {
+  editKey = key;
+  const m = state.modes[key];
+  $('editTitle').textContent = m.name;
+  $('editSpan').textContent = m.span + '  ·  drag boundaries in the real app';
+  $('intInput').value = m.intention;
+  $('pickSearch').value = '';
+  renderPicker();
+  show('editLayer');
+}
+$('closeEdit').addEventListener('click', () => { renderHome(); openSettings(); });
+$('intInput').addEventListener('input', e => {
+  state.modes[editKey].intention = e.target.value;
+  renderHome();
+});
+$('pickSearch').addEventListener('input', renderPicker);
+
+/* --- search sheet --- */
+function openSheet() {
+  $('sheetSearch').value = '';
+  renderSheet();
+  $('sheet').classList.add('show');
+  setTimeout(() => $('sheetSearch').focus(), 350);
+}
+function closeSheet() { $('sheet').classList.remove('show'); }
+$('sheetSearch').addEventListener('input', renderSheet);
+
+/* --- paused --- */
+const PAUSE_COLORS = ['#3E6B8C','#7C4A4A','#4A6B4E','#8C7A3E','#5B4A7C','#3E8C7E','#8C5A3E','#6B6B6B'];
+function showPaused() {
+  const g = $('pauseGrid'); g.innerHTML = '';
+  Object.keys(APPS).sort().forEach((n,i) => {
+    const d = document.createElement('div');
+    d.className = 'gapp';
+    d.innerHTML = `<div class="gicon" style="background:${PAUSE_COLORS[i % PAUSE_COLORS.length]}"></div><span class="glabel">${n}</span>`;
+    g.appendChild(d);
+  });
+  $('paused').classList.add('show');
+}
+$('resumeBtn').addEventListener('click', () => {
+  $('paused').classList.remove('show');
+  show('homeLayer');
+  toast('Welcome back.');
+});
+
+/* --- gestures on home: hold = settings, drag up = search --- */
+let pd = null, holdTimer = null, fired = false;
+const home = $('homeLayer');
+home.addEventListener('pointerdown', e => {
+  pd = { y: e.clientY };
+  fired = false;
+  screen.classList.add('holding');
+  holdTimer = setTimeout(() => {
+    if (!fired) { fired = true; screen.classList.remove('holding'); openSettings(); }
+  }, 550);
+});
+home.addEventListener('pointermove', e => {
+  if (!pd || fired) return;
+  const dy = e.clientY - pd.y;
+  if (Math.abs(dy) > 12) { clearTimeout(holdTimer); screen.classList.remove('holding'); }
+  if (dy < -48) { fired = true; openSheet(); }
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev =>
+  home.addEventListener(ev, () => {
+    clearTimeout(holdTimer);
+    screen.classList.remove('holding');
+    pd = null;
+  }));
+/* tap outside sheet closes it */
+$('sheet').addEventListener('pointerdown', e => e.stopPropagation());
+screen.addEventListener('pointerdown', e => {
+  if ($('sheet').classList.contains('show')) closeSheet();
+});
+
+/* --- demo mode switch --- */
+document.querySelectorAll('.mode-btn').forEach(b =>
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(x => {
+      x.classList.toggle('on', x === b);
+      x.setAttribute('aria-selected', x === b ? 'true' : 'false');
+    });
+    state.mode = b.dataset.mode;
+    applyPalette(); renderHome();
+    if ($('settingsLayer').classList.contains('show')) renderSettings();
+  }));
+
+/* init */
+applyPalette();
+renderHome();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- windowBackground matches the Dawn paper so cold start never flashes white. -->
+    <style name="Theme.Sundial" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#F3EEE6</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+</resources>
