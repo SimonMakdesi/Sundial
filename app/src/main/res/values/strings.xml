@@ -12,4 +12,9 @@
     <string name="settings_title">Your day</string>
     <string name="settings_done">Done</string>
     <string name="settings_coming">Mode cards, appearance, and system settings arrive soon.</string>
+    <string name="ritual_line">Take one breath.</string>
+    <string name="ritual_still">Still want in?</string>
+    <string name="ritual_open_ten">Open for 10 min</string>
+    <string name="ritual_not_now">Not now</string>
+    <string name="toast_good_call">Good call.</string>
 </resources>

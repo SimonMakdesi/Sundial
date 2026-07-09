@@ -1,7 +1,8 @@
 package com.makdesi.sundial.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,12 +53,14 @@ import com.makdesi.sundial.theme.Serif
  * Swipe-up sheet: everything is findable, nothing is blocked (plan §3.4).
  * Apps outside the current mode carry a faint `asleep` tag but launch normally.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SearchSheet(
     palette: Palette,
     apps: List<AppEntry>,
+    ritualFlags: Set<String>,
     onOpen: (AppEntry) -> Unit,
+    onToggleRitual: (AppEntry) -> Unit, // debug-only until the mode editor (M5)
     onDismiss: () -> Unit,
     awakePackages: Set<String>? = null, // null until per-mode lists exist (M5): everything is awake
 ) {
@@ -133,7 +138,12 @@ fun SearchSheet(
             } else {
                 LazyColumn(Modifier.padding(top = 8.dp)) {
                     items(results, key = { it.packageName + "/" + it.activityClassName }) { app ->
-                        Column(Modifier.clickable { onOpen(app) }) {
+                        Column(
+                            Modifier.combinedClickable(
+                                onClick = { onOpen(app) },
+                                onLongClick = { onToggleRitual(app) },
+                            )
+                        ) {
                             Row(
                                 verticalAlignment = Alignment.Bottom,
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 11.dp),
@@ -154,6 +164,15 @@ fun SearchSheet(
                                         fontSize = 12.sp,
                                         letterSpacing = 0.03.em,
                                         color = palette.faint,
+                                    )
+                                }
+                                if (app.packageName in ritualFlags) {
+                                    Spacer(Modifier.width(10.dp))
+                                    Box(
+                                        Modifier
+                                            .size(5.dp)
+                                            .align(Alignment.CenterVertically)
+                                            .background(palette.faint, CircleShape),
                                     )
                                 }
                             }

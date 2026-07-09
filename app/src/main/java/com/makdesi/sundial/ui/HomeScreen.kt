@@ -19,10 +19,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -112,6 +114,7 @@ fun HomeScreen(
     palette: Palette,
     home: HomeState,
     apps: List<AppEntry>,
+    ritualFlags: Set<String>,
     onOpen: (AppEntry) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenSearch: () -> Unit,
@@ -237,7 +240,12 @@ fun HomeScreen(
                     modifier = Modifier.padding(top = 10.dp),
                 )
 
-                // app list with soft fade masks top and bottom, no scrollbar
+                // app list with soft fade masks top and bottom, no scrollbar.
+                // Stretch overscroll is disabled: it would swallow the leftover
+                // drag that lets swiping past the end open search.
+                androidx.compose.runtime.CompositionLocalProvider(
+                    androidx.compose.foundation.LocalOverscrollConfiguration provides null
+                ) {
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
@@ -258,13 +266,8 @@ fun HomeScreen(
                         },
                 ) {
                     items(apps, key = { it.packageName + "/" + it.activityClassName }) { app ->
-                        Text(
-                            text = app.label.lowercase(),
-                            fontFamily = Grotesk,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 19.sp,
-                            letterSpacing = 0.01.em,
-                            color = palette.ink,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 48.dp)
@@ -273,8 +276,26 @@ fun HomeScreen(
                                     onLongClick = onOpenSettings,
                                 )
                                 .padding(vertical = 9.dp),
-                        )
+                        ) {
+                            Text(
+                                text = app.label.lowercase(),
+                                fontFamily = Grotesk,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 19.sp,
+                                letterSpacing = 0.01.em,
+                                color = palette.ink,
+                            )
+                            if (app.packageName in ritualFlags) {
+                                Spacer(Modifier.width(10.dp))
+                                Box(
+                                    Modifier
+                                        .size(5.dp)
+                                        .background(palette.faint, CircleShape),
+                                )
+                            }
+                        }
                     }
+                }
                 }
 
                 Text(

@@ -13,10 +13,13 @@ import com.makdesi.sundial.data.AppEntry
 import com.makdesi.sundial.data.AppRepository
 import com.makdesi.sundial.domain.Mode
 import com.makdesi.sundial.domain.ModeEngine
+import com.makdesi.sundial.domain.RitualGate
 import com.makdesi.sundial.system.AlarmScheduler
 import com.makdesi.sundial.ui.HomeState
 import com.makdesi.sundial.ui.SundialRoot
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -28,7 +31,15 @@ import java.util.Locale
 
 class SundialViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = AppRepository(application, viewModelScope)
+    private val ritualGate = RitualGate(application, viewModelScope)
     val apps = repository.apps
+    val ritualFlags = ritualGate.flags
+
+    /** The app waiting behind the breath ritual, if any. */
+    val pendingRitual = MutableStateFlow<AppEntry?>(null)
+
+    /** In-app toast lines ("Good call.", "Welcome back."). */
+    val toasts = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
     /** Ticks on the minute while the UI is visible; silent otherwise (zero polling in background). */
     private val minuteTicker = flow {
@@ -66,7 +77,31 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
         )
     }
 
-    fun open(app: AppEntry) = repository.launch(app)
+    fun open(app: AppEntry) {
+        if (ritualGate.shouldAsk(app.packageName)) {
+            pendingRitual.value = app
+        } else {
+            repository.launch(app)
+        }
+    }
+
+    fun ritualOpenForTen() {
+        pendingRitual.value?.let {
+            ritualGate.openWindow(it.packageName)
+            repository.launch(it)
+        }
+        pendingRitual.value = null
+    }
+
+    fun ritualNotNow() {
+        pendingRitual.value = null
+        toasts.tryEmit(getApplication<Application>().getString(R.string.toast_good_call))
+    }
+
+    /** Debug-only until the mode editor (M5) — flags an app for the ritual. */
+    fun toggleRitualFlag(app: AppEntry) {
+        if (BuildConfig.DEBUG) ritualGate.toggle(app.packageName)
+    }
 
     override fun onCleared() {
         repository.dispose()
