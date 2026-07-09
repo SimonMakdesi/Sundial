@@ -1,34 +1,36 @@
 package com.makdesi.sundial
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.activity.viewModels
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.makdesi.sundial.data.AppEntry
+import com.makdesi.sundial.data.AppRepository
+import com.makdesi.sundial.ui.HomeScreen
 
-// Dawn paper, from the design contract's PALETTES. The full theme system lands in M2.
-private val DawnBg = Color(0xFFF3EEE6)
+class SundialViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = AppRepository(application, viewModelScope)
+    val apps = repository.apps
+
+    fun open(app: AppEntry) = repository.launch(app)
+
+    override fun onCleared() {
+        repository.dispose()
+    }
+}
 
 class MainActivity : ComponentActivity() {
+    private val viewModel: SundialViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            BlankHome()
+            HomeScreen(appsFlow = viewModel.apps, onOpen = viewModel::open)
         }
     }
-}
-
-@Composable
-private fun BlankHome() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DawnBg)
-    )
 }
