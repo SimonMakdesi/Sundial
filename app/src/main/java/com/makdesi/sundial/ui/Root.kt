@@ -41,7 +41,7 @@ import com.makdesi.sundial.theme.paletteFor
 import com.makdesi.sundial.theme.reducedMotion
 import kotlinx.coroutines.delay
 
-private enum class Layer { HOME, SETTINGS, EDIT }
+private enum class Layer { HOME, SETTINGS, EDIT, THEME }
 
 @Composable
 fun SundialRoot(viewModel: SundialViewModel) {
@@ -65,7 +65,8 @@ fun SundialRoot(viewModel: SundialViewModel) {
         com.makdesi.sundial.data.ThemeChoice.DUSK -> com.makdesi.sundial.domain.Mode.EVENING
     }
     val palette = animatedPalette(
-        if (instrument) com.makdesi.sundial.theme.InstrumentPalette else paletteFor(paletteMode)
+        if (instrument) com.makdesi.sundial.theme.instrumentPaletteFor(paletteMode)
+        else paletteFor(paletteMode)
     )
 
     var layer by remember { mutableStateOf(Layer.HOME) }
@@ -188,7 +189,7 @@ fun SundialRoot(viewModel: SundialViewModel) {
                         editMode = it
                         layer = Layer.EDIT
                     },
-                    onTheme = viewModel::setTheme,
+                    onOpenTheme = { layer = Layer.THEME },
                     onAlign = viewModel::setAlign,
                     onFace = viewModel::setFace,
                     onEnableWeather = viewModel::enableWeather,
@@ -200,6 +201,17 @@ fun SundialRoot(viewModel: SundialViewModel) {
                         viewModel.pause()
                     },
                     onDone = { layer = Layer.HOME },
+                )
+                Layer.THEME -> ThemePicker(
+                    palette = palette,
+                    face = appearance.face,
+                    current = appearance.theme,
+                    home = home,
+                    onPick = {
+                        viewModel.setTheme(it)
+                        layer = Layer.SETTINGS
+                    },
+                    onBack = { layer = Layer.SETTINGS },
                 )
                 Layer.EDIT -> ModeEditor(
                     palette = palette,
@@ -217,7 +229,10 @@ fun SundialRoot(viewModel: SundialViewModel) {
 
         // Back walks the layers home; Back on home does nothing (it's the home screen).
         BackHandler(enabled = layer != Layer.HOME) {
-            layer = if (layer == Layer.EDIT) Layer.SETTINGS else Layer.HOME
+            layer = when (layer) {
+                Layer.EDIT, Layer.THEME -> Layer.SETTINGS
+                else -> Layer.HOME
+            }
         }
 
         if (searchOpen) {

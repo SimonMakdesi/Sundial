@@ -69,20 +69,33 @@ fun paletteFor(mode: Mode): Palette = when (mode) {
 }
 
 /**
- * The Instrument face (sundial-two-faces.html, edition B): one fixed light
- * palette, ruled lines, a single orange accent for live information. The
- * rhythm still follows the clock; only the skin holds still.
+ * The Instrument face (sundial-two-faces.html, edition B): ruled lines and a
+ * single orange accent for live information. It follows the sun too — the
+ * demo's cool light palette is its Noon; Dawn warms the paper, Dusk goes
+ * dark ember. No horizon gradients, no washes: the scale carries the time.
  */
-val InstrumentPalette = Palette(
-    bg = Color(0xFFF1F1EF),
-    ink = Color(0xFF141517),
-    faint = Color(0x80141517),          // .50
-    hair = Color(0x24141517),           // .14
-    overlay = Color(0xF0F1F1EF),
-    horizon = listOf(Color(0xFF141517), Color(0xFF141517), Color(0xFF141517), Color(0xFF141517)),
+private val InstrumentAccent = Color(0xFFE8501E)
+
+private fun instrument(bg: Color, ink: Color, light: Boolean) = Palette(
+    bg = bg,
+    ink = ink,
+    faint = ink.copy(alpha = .5f),
+    hair = ink.copy(alpha = .14f),
+    overlay = bg.copy(alpha = .94f),
+    horizon = listOf(ink, ink, ink, ink),
     horizonStops = listOf(0f, .35f, .75f, 1f),
     wash = Color(0x00000000),
     washHeight = 0f,
-    isLight = true,
-    accent = Color(0xFFE8501E),
+    isLight = light,
+    accent = InstrumentAccent,
 )
+
+val InstrumentDawn = instrument(Color(0xFFF3EEE6), Color(0xFF2A2620), light = true)
+val InstrumentNoon = instrument(Color(0xFFF1F1EF), Color(0xFF141517), light = true)
+val InstrumentDusk = instrument(Color(0xFF131216), Color(0xFFD9D3C8), light = false)
+
+fun instrumentPaletteFor(mode: Mode): Palette = when (mode) {
+    Mode.MORNING -> InstrumentDawn
+    Mode.DAY -> InstrumentNoon
+    Mode.EVENING -> InstrumentDusk
+}

@@ -61,7 +61,7 @@ fun SettingsScreen(
     installedApps: List<AppEntry>,
     isDefaultLauncher: Boolean,
     onEditMode: (Mode) -> Unit,
-    onTheme: (ThemeChoice) -> Unit,
+    onOpenTheme: () -> Unit,
     onAlign: (Side) -> Unit,
     onFace: (Face) -> Unit,
     onEnableWeather: (locationGranted: Boolean) -> Unit,
@@ -149,31 +149,19 @@ fun SettingsScreen(
                 }
                 Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
 
-                // Instrument carries its own fixed palette; the theme row applies to Signature.
-                if (appearance.face == Face.SIGNATURE) {
-                    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                        Text(
-                            text = stringResource(R.string.settings_theme),
-                            fontFamily = LocalVoice.current.functional,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 15.sp,
-                            color = palette.ink,
-                        )
-                        Segmented(
-                            palette = palette,
-                            options = listOf(
-                                ThemeChoice.SUN to stringResource(R.string.theme_sun),
-                                ThemeChoice.DAWN to stringResource(R.string.theme_dawn),
-                                ThemeChoice.NOON to stringResource(R.string.theme_noon),
-                                ThemeChoice.DUSK to stringResource(R.string.theme_dusk),
-                            ),
-                            selected = appearance.theme,
-                            onSelect = onTheme,
-                            modifier = Modifier.padding(top = 10.dp),
-                        )
-                    }
-                    Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
-                }
+                SystemRow(
+                    palette = palette,
+                    label = stringResource(R.string.settings_theme),
+                    status = stringResource(
+                        when (appearance.theme) {
+                            ThemeChoice.SUN -> R.string.theme_sun
+                            ThemeChoice.DAWN -> R.string.theme_dawn
+                            ThemeChoice.NOON -> R.string.theme_noon
+                            ThemeChoice.DUSK -> R.string.theme_dusk
+                        }
+                    ),
+                    onClick = onOpenTheme,
+                )
 
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
