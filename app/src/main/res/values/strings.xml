@@ -18,6 +18,12 @@
     <string name="theme_dawn">Dawn</string>
     <string name="theme_noon">Noon</string>
     <string name="theme_dusk">Dusk</string>
+    <string name="settings_face">Face</string>
+    <string name="face_signature">Signature</string>
+    <string name="face_instrument">Instrument</string>
+    <string name="instrument_count">%1$d new</string>
+    <string name="instrument_foot_asleep">%1$d asleep</string>
+    <string name="instrument_foot_next">%1$s → %2$s</string>
     <string name="settings_alignment">Alignment</string>
     <string name="align_left">Left</string>
     <string name="align_right">Right</string>

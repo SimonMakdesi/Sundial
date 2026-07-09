@@ -19,6 +19,8 @@ data class Palette(
     val wash: Color,
     val washHeight: Float,
     val isLight: Boolean,
+    /** One functional accent, used only for "live" information (Instrument). */
+    val accent: Color = Color.Unspecified,
 )
 
 val Dawn = Palette(
@@ -65,3 +67,22 @@ fun paletteFor(mode: Mode): Palette = when (mode) {
     Mode.DAY -> Noon
     Mode.EVENING -> Dusk
 }
+
+/**
+ * The Instrument face (sundial-two-faces.html, edition B): one fixed light
+ * palette, ruled lines, a single orange accent for live information. The
+ * rhythm still follows the clock; only the skin holds still.
+ */
+val InstrumentPalette = Palette(
+    bg = Color(0xFFF1F1EF),
+    ink = Color(0xFF141517),
+    faint = Color(0x80141517),          // .50
+    hair = Color(0x24141517),           // .14
+    overlay = Color(0xF0F1F1EF),
+    horizon = listOf(Color(0xFF141517), Color(0xFF141517), Color(0xFF141517), Color(0xFF141517)),
+    horizonStops = listOf(0f, .35f, .75f, 1f),
+    wash = Color(0x00000000),
+    washHeight = 0f,
+    isLight = true,
+    accent = Color(0xFFE8501E),
+)

@@ -42,6 +42,8 @@ private data class ClockState(
     val time: String,
     val meridiem: String?,
     val dateline: String,
+    val dateShort: String,
+    val dayFraction: Float,
     val nextMode: Mode,
     val nextModeAt: String,
 )
@@ -99,8 +101,10 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
             mode = clock.mode,
             time = clock.time,
             meridiem = clock.meridiem,
-            dateline = clock.dateline +
-                (weatherState.temperature?.let { " · $it" } ?: ""),
+            dateline = clock.dateline,
+            dateShort = clock.dateShort,
+            dayFraction = clock.dayFraction,
+            temperature = weatherState.temperature,
             nextMode = clock.nextMode,
             nextModeAt = clock.nextModeAt,
             modeApps = modeApps,
@@ -115,6 +119,7 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
         val c = buildClockState()
         return HomeState(
             mode = c.mode, time = c.time, meridiem = c.meridiem, dateline = c.dateline,
+            dateShort = c.dateShort, dayFraction = c.dayFraction, temperature = null,
             nextMode = c.nextMode, nextModeAt = c.nextModeAt,
             modeApps = emptyList(), intention = "", asleepCount = 0, awakePackages = emptySet(),
             counts = emptyMap(),
@@ -132,12 +137,15 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
         val boundary = ModeEngine.nextBoundary(now)
         val boundaryPattern = if (is24) timePattern else "h:mm a"
 
+        val dateShortPattern = DateFormat.getBestDateTimePattern(locale, "EEEddMMM")
         return ClockState(
             mode = ModeEngine.modeAt(now),
             time = now.format(DateTimeFormatter.ofPattern(timePattern, locale)),
             meridiem = if (is24) null
             else now.format(DateTimeFormatter.ofPattern("a", locale)).lowercase(locale),
             dateline = now.format(DateTimeFormatter.ofPattern(datePattern, locale)),
+            dateShort = now.format(DateTimeFormatter.ofPattern(dateShortPattern, locale)),
+            dayFraction = (now.hour * 60 + now.minute) / 1440f,
             nextMode = ModeEngine.nextSpan(now).mode,
             nextModeAt = boundary.format(DateTimeFormatter.ofPattern(boundaryPattern, locale))
                 .lowercase(locale),
@@ -177,6 +185,8 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
     fun setTheme(theme: com.makdesi.sundial.data.ThemeChoice) = day.setTheme(theme)
 
     fun setAlign(align: com.makdesi.sundial.data.Side) = day.setAlign(align)
+
+    fun setFace(face: com.makdesi.sundial.data.Face) = day.setFace(face)
 
     /**
      * The location ladder (plan §3.8): granted → nearest city via last known

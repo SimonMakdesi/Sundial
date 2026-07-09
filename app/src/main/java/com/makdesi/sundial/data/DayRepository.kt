@@ -24,9 +24,13 @@ enum class ThemeChoice { SUN, DAWN, NOON, DUSK }
 /** Home/search mirroring for one-handed reach. */
 enum class Side { LEFT, RIGHT }
 
+/** Editions — the same product wearing different identities (two-faces demo). */
+enum class Face { SIGNATURE, INSTRUMENT }
+
 data class Appearance(
     val theme: ThemeChoice = ThemeChoice.SUN,
     val align: Side = Side.LEFT,
+    val face: Face = Face.SIGNATURE,
 )
 
 /**
@@ -41,6 +45,7 @@ class DayRepository(private val context: Context, private val scope: CoroutineSc
     private val seededKey = booleanPreferencesKey("seeded")
     private val themeKey = stringPreferencesKey("theme")
     private val alignKey = stringPreferencesKey("align")
+    private val faceKey = stringPreferencesKey("face")
     private val onboardedKey = booleanPreferencesKey("onboarded")
     private val pausedKey = booleanPreferencesKey("paused")
 
@@ -87,6 +92,8 @@ class DayRepository(private val context: Context, private val scope: CoroutineSc
                     ?: ThemeChoice.SUN,
                 align = prefs[alignKey]?.let { runCatching { Side.valueOf(it) }.getOrNull() }
                     ?: Side.LEFT,
+                face = prefs[faceKey]?.let { runCatching { Face.valueOf(it) }.getOrNull() }
+                    ?: Face.SIGNATURE,
             )
         }
         .stateIn(scope, SharingStarted.Eagerly, Appearance())
@@ -100,6 +107,12 @@ class DayRepository(private val context: Context, private val scope: CoroutineSc
     fun setAlign(align: Side) {
         scope.launch {
             context.sundialDataStore.edit { it[alignKey] = align.name }
+        }
+    }
+
+    fun setFace(face: Face) {
+        scope.launch {
+            context.sundialDataStore.edit { it[faceKey] = face.name }
         }
     }
 

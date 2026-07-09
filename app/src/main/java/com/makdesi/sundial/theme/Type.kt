@@ -44,3 +44,26 @@ val Grotesk = FontFamily(
     manrope(600),
     manrope(700),
 )
+
+/*
+ * The Instrument face (sundial-two-faces.html, edition B) speaks two other
+ * voices: Space Grotesk for everything, IBM Plex Mono for metadata.
+ */
+
+@OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
+private fun spaceGrotesk(weight: Int) = Font(
+    resId = R.font.space_grotesk_var,
+    weight = FontWeight(weight),
+    variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
+)
+
+val Instrument = FontFamily(
+    spaceGrotesk(400),
+    spaceGrotesk(500),
+    spaceGrotesk(700),
+)
+
+val Mono = FontFamily(
+    Font(R.font.plex_mono_regular, FontWeight.Normal),
+    Font(R.font.plex_mono_medium, FontWeight.Medium),
+)

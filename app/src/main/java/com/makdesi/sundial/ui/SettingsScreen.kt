@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.makdesi.sundial.R
 import com.makdesi.sundial.data.AppEntry
 import com.makdesi.sundial.data.Appearance
+import com.makdesi.sundial.data.Face
 import com.makdesi.sundial.data.ModeConfig
 import com.makdesi.sundial.data.Side
 import com.makdesi.sundial.data.ThemeChoice
@@ -61,6 +62,7 @@ fun SettingsScreen(
     onEditMode: (Mode) -> Unit,
     onTheme: (ThemeChoice) -> Unit,
     onAlign: (Side) -> Unit,
+    onFace: (Face) -> Unit,
     onEnableWeather: (locationGranted: Boolean) -> Unit,
     onDisableWeather: () -> Unit,
     onSearchCities: suspend (String) -> List<WeatherCity>,
@@ -122,9 +124,13 @@ fun SettingsScreen(
 
                 SectionLabel(stringResource(R.string.settings_appearance), palette)
 
-                Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
-                        text = stringResource(R.string.settings_theme),
+                        text = stringResource(R.string.settings_face),
                         fontFamily = Grotesk,
                         fontWeight = FontWeight.Medium,
                         fontSize = 15.sp,
@@ -133,17 +139,40 @@ fun SettingsScreen(
                     Segmented(
                         palette = palette,
                         options = listOf(
-                            ThemeChoice.SUN to stringResource(R.string.theme_sun),
-                            ThemeChoice.DAWN to stringResource(R.string.theme_dawn),
-                            ThemeChoice.NOON to stringResource(R.string.theme_noon),
-                            ThemeChoice.DUSK to stringResource(R.string.theme_dusk),
+                            Face.SIGNATURE to stringResource(R.string.face_signature),
+                            Face.INSTRUMENT to stringResource(R.string.face_instrument),
                         ),
-                        selected = appearance.theme,
-                        onSelect = onTheme,
-                        modifier = Modifier.padding(top = 10.dp),
+                        selected = appearance.face,
+                        onSelect = onFace,
                     )
                 }
                 Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
+
+                // Instrument carries its own fixed palette; the theme row applies to Signature.
+                if (appearance.face == Face.SIGNATURE) {
+                    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                        Text(
+                            text = stringResource(R.string.settings_theme),
+                            fontFamily = Grotesk,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 15.sp,
+                            color = palette.ink,
+                        )
+                        Segmented(
+                            palette = palette,
+                            options = listOf(
+                                ThemeChoice.SUN to stringResource(R.string.theme_sun),
+                                ThemeChoice.DAWN to stringResource(R.string.theme_dawn),
+                                ThemeChoice.NOON to stringResource(R.string.theme_noon),
+                                ThemeChoice.DUSK to stringResource(R.string.theme_dusk),
+                            ),
+                            selected = appearance.theme,
+                            onSelect = onTheme,
+                            modifier = Modifier.padding(top = 10.dp),
+                        )
+                    }
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(palette.hair))
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),

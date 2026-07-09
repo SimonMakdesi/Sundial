@@ -70,6 +70,9 @@ data class HomeState(
     val time: String,
     val meridiem: String?,
     val dateline: String,
+    val dateShort: String,      // Instrument dateline segment, e.g. "Wed 08 Jul"
+    val dayFraction: Float,     // 0..1 through the 24h day — the scale marker
+    val temperature: String?,   // weather whisper, null when off/stale
     val nextMode: Mode,
     val nextModeAt: String,
     val modeApps: List<AppEntry>,
@@ -129,22 +132,24 @@ fun animatedPalette(target: Palette): Palette {
         wash = color(target.wash, slow),
         washHeight = washH,
         isLight = target.isLight,
+        accent = target.accent, // functional accent snaps; only atmosphere crossfades
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+/** The home gesture shell (plan §3.3), shared by both faces. */
+class HomeGestures(
+    val holdScale: Float,
+    val holdAlpha: Float,
+    val rootModifier: Modifier,
+    val overscroll: NestedScrollConnection,
+)
+
 @Composable
-fun HomeScreen(
-    palette: Palette,
-    home: HomeState,
-    ritualFlags: Set<String>,
-    align: com.makdesi.sundial.data.Side,
-    onOpen: (AppEntry) -> Unit,
+fun rememberHomeGestures(
     onOpenSettings: () -> Unit,
     onOpenSearch: () -> Unit,
-) {
-    val right = align == com.makdesi.sundial.data.Side.RIGHT
-    // During a hold the content recedes slightly as tactile feedback (plan §3.3).
+): HomeGestures {
+    // During a hold the content recedes slightly as tactile feedback.
     var holding by remember { mutableStateOf(false) }
     val holdScale by animateFloatAsState(if (holding) .97f else 1f, tween(500), label = "holdS")
     val holdAlpha by animateFloatAsState(if (holding) .75f else 1f, tween(500), label = "holdA")
@@ -168,36 +173,59 @@ fun HomeScreen(
         }
     }
 
+    val rootModifier = Modifier
+        .pointerInput(Unit) {
+            detectTapGestures(
+                onPress = {
+                    holding = true
+                    tryAwaitRelease()
+                    holding = false
+                },
+                onLongPress = {
+                    holding = false
+                    onOpenSettings()
+                },
+            )
+        }
+        .pointerInput(Unit) {
+            var dragged = 0f
+            detectVerticalDragGestures(
+                onDragStart = { dragged = 0f },
+                onVerticalDrag = { _, delta ->
+                    dragged += delta
+                    if (dragged < -48.dp.toPx()) {
+                        dragged = 0f
+                        onOpenSearch()
+                    }
+                },
+            )
+        }
+
+    return HomeGestures(holdScale, holdAlpha, rootModifier, overscroll)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun HomeScreen(
+    palette: Palette,
+    home: HomeState,
+    ritualFlags: Set<String>,
+    align: com.makdesi.sundial.data.Side,
+    onOpen: (AppEntry) -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenSearch: () -> Unit,
+) {
+    val right = align == com.makdesi.sundial.data.Side.RIGHT
+    val gestures = rememberHomeGestures(onOpenSettings, onOpenSearch)
+    val holdScale = gestures.holdScale
+    val holdAlpha = gestures.holdAlpha
+    val overscroll = gestures.overscroll
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(palette.bg)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        holding = true
-                        tryAwaitRelease()
-                        holding = false
-                    },
-                    onLongPress = {
-                        holding = false
-                        onOpenSettings()
-                    },
-                )
-            }
-            .pointerInput(Unit) {
-                var dragged = 0f
-                detectVerticalDragGestures(
-                    onDragStart = { dragged = 0f },
-                    onVerticalDrag = { _, delta ->
-                        dragged += delta
-                        if (dragged < -48.dp.toPx()) {
-                            dragged = 0f
-                            onOpenSearch()
-                        }
-                    },
-                )
-            },
+            .then(gestures.rootModifier),
     ) {
         // wash: the horizon's bleed down the screen
         Box(
@@ -259,7 +287,8 @@ fun HomeScreen(
                     }
                 }
                 Text(
-                    text = home.dateline,
+                    text = home.dateline +
+                        (home.temperature?.let { " · $it" } ?: ""),
                     fontFamily = Grotesk,
                     fontSize = 12.5.sp,
                     letterSpacing = 0.04.em,

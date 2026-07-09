@@ -55,14 +55,18 @@ fun SundialRoot(viewModel: SundialViewModel) {
     val pendingRitual by viewModel.pendingRitual.collectAsState()
 
     // A fixed theme locks the palette; the rhythm (apps, intention, footer)
-    // keeps following the clock regardless (plan §3.6).
+    // keeps following the clock regardless (plan §3.6). The Instrument face
+    // carries its own fixed palette (two-faces demo, edition B).
+    val instrument = appearance.face == com.makdesi.sundial.data.Face.INSTRUMENT
     val paletteMode = when (appearance.theme) {
         com.makdesi.sundial.data.ThemeChoice.SUN -> home.mode
         com.makdesi.sundial.data.ThemeChoice.DAWN -> com.makdesi.sundial.domain.Mode.MORNING
         com.makdesi.sundial.data.ThemeChoice.NOON -> com.makdesi.sundial.domain.Mode.DAY
         com.makdesi.sundial.data.ThemeChoice.DUSK -> com.makdesi.sundial.domain.Mode.EVENING
     }
-    val palette = animatedPalette(paletteFor(paletteMode))
+    val palette = animatedPalette(
+        if (instrument) com.makdesi.sundial.theme.InstrumentPalette else paletteFor(paletteMode)
+    )
 
     var layer by remember { mutableStateOf(Layer.HOME) }
     var editMode by remember { mutableStateOf(com.makdesi.sundial.domain.Mode.MORNING) }
@@ -146,15 +150,27 @@ fun SundialRoot(viewModel: SundialViewModel) {
             label = "layer",
         ) { current ->
             when (current) {
-                Layer.HOME -> HomeScreen(
-                    palette = palette,
-                    home = home,
-                    ritualFlags = ritualFlags,
-                    align = appearance.align,
-                    onOpen = viewModel::open,
-                    onOpenSettings = { layer = Layer.SETTINGS },
-                    onOpenSearch = { searchOpen = true },
-                )
+                Layer.HOME -> if (instrument) {
+                    InstrumentHome(
+                        palette = palette,
+                        home = home,
+                        ritualFlags = ritualFlags,
+                        align = appearance.align,
+                        onOpen = viewModel::open,
+                        onOpenSettings = { layer = Layer.SETTINGS },
+                        onOpenSearch = { searchOpen = true },
+                    )
+                } else {
+                    HomeScreen(
+                        palette = palette,
+                        home = home,
+                        ritualFlags = ritualFlags,
+                        align = appearance.align,
+                        onOpen = viewModel::open,
+                        onOpenSettings = { layer = Layer.SETTINGS },
+                        onOpenSearch = { searchOpen = true },
+                    )
+                }
                 Layer.SETTINGS -> SettingsScreen(
                     palette = palette,
                     daySettings = daySettings,
@@ -169,6 +185,7 @@ fun SundialRoot(viewModel: SundialViewModel) {
                     },
                     onTheme = viewModel::setTheme,
                     onAlign = viewModel::setAlign,
+                    onFace = viewModel::setFace,
                     onEnableWeather = viewModel::enableWeather,
                     onDisableWeather = viewModel::disableWeather,
                     onSearchCities = { viewModel.weather.searchCities(it) },
