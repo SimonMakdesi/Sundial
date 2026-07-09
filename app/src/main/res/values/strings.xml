@@ -38,7 +38,7 @@
     <string name="editor_fullness">%1$d apps — a screen this full stops being quiet.</string>
     <string name="ritual_line">Take one breath.</string>
     <string name="ritual_still">Still want in?</string>
-    <string name="ritual_open_ten">Open for 10 min</string>
+    <string name="ritual_open_ten">Open</string>
     <string name="ritual_not_now">Not now</string>
     <string name="toast_good_call">Good call.</string>
     <string name="toast_welcome_back">Welcome back.</string>
