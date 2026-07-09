@@ -4,6 +4,8 @@
     <!-- Justified: Sundial is a launcher; listing every launchable app is its core function. -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- The lock screen wears the current face/theme (normal permission). -->
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <!-- Solely for the optional, off-by-default weather whisper (plan §3.8).
          With weather off, zero network calls and zero location reads. -->
     <uses-permission android:name="android.permission.INTERNET" />

@@ -68,6 +68,16 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
     val onboarded = day.onboarded
     val paused = day.paused
 
+    init {
+        // The lock screen mirrors the current face/theme; guarded, so
+        // unchanged looks cost nothing (plus the boundary receivers re-sync).
+        viewModelScope.launch {
+            appearance.collect {
+                com.makdesi.sundial.data.WallpaperSync.sync(getApplication())
+            }
+        }
+    }
+
     fun completeOnboarding(selected: List<String>) = day.completeOnboarding(selected)
 
     fun pause() = day.setPaused(true)
