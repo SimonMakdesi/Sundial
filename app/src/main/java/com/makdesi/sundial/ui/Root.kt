@@ -45,6 +45,8 @@ private enum class Layer { HOME, SETTINGS, EDIT }
 
 @Composable
 fun SundialRoot(viewModel: SundialViewModel) {
+    val onboarded by viewModel.onboarded.collectAsState()
+    val paused by viewModel.paused.collectAsState()
     val home by viewModel.home.collectAsState()
     val apps by viewModel.apps.collectAsState()
     val daySettings by viewModel.daySettings.collectAsState()
@@ -104,6 +106,36 @@ fun SundialRoot(viewModel: SundialViewModel) {
     val reduced = reducedMotion(LocalContext.current)
     val layerMs = if (reduced) Motion.NEAR_INSTANT_MS else Motion.LAYER_MS
 
+    // First run: DataStore still loading → hold a quiet frame; not onboarded → onboarding.
+    when (onboarded) {
+        null -> {
+            Box(Modifier.fillMaxSize().background(palette.bg))
+            return
+        }
+        false -> {
+            Onboarding(
+                palette = palette,
+                apps = apps,
+                suggested = viewModel.day.suggestedSeed(apps.map { it.packageName }),
+                onOpenWhispersSettings = {
+                    context.startActivity(
+                        android.content.Intent(
+                            android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS
+                        )
+                    )
+                },
+                onOpenHomeSettings = {
+                    context.startActivity(
+                        android.content.Intent(android.provider.Settings.ACTION_HOME_SETTINGS)
+                    )
+                },
+                onComplete = viewModel::completeOnboarding,
+            )
+            return
+        }
+        else -> Unit
+    }
+
     Box(Modifier.fillMaxSize().background(palette.bg)) {
         AnimatedContent(
             targetState = layer,
@@ -141,6 +173,10 @@ fun SundialRoot(viewModel: SundialViewModel) {
                     onDisableWeather = viewModel::disableWeather,
                     onSearchCities = { viewModel.weather.searchCities(it) },
                     onSetCity = { viewModel.weather.setCity(it) },
+                    onPause = {
+                        layer = Layer.HOME
+                        viewModel.pause()
+                    },
                     onDone = { layer = Layer.HOME },
                 )
                 Layer.EDIT -> ModeEditor(
@@ -189,6 +225,19 @@ fun SundialRoot(viewModel: SundialViewModel) {
             )
         }
         BackHandler(enabled = pendingRitual != null) { viewModel.ritualNotNow() }
+
+        if (paused) {
+            PausedScreen(
+                apps = apps,
+                onOpen = viewModel::openPlain,
+                onChangeLauncher = {
+                    context.startActivity(
+                        android.content.Intent(android.provider.Settings.ACTION_HOME_SETTINGS)
+                    )
+                },
+                onResume = viewModel::resume,
+            )
+        }
 
         // in-app toast, in the app's own voice
         AnimatedVisibility(

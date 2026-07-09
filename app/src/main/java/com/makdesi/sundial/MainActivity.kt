@@ -63,11 +63,16 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
     /** In-app toast lines ("Good call.", "Welcome back."). */
     val toasts = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
-    init {
-        viewModelScope.launch {
-            val installed = apps.first { it.isNotEmpty() }
-            day.seedIfFirstRun(installed.map { it.packageName })
-        }
+    val onboarded = day.onboarded
+    val paused = day.paused
+
+    fun completeOnboarding(selected: List<String>) = day.completeOnboarding(selected)
+
+    fun pause() = day.setPaused(true)
+
+    fun resume() {
+        day.setPaused(false)
+        toasts.tryEmit(getApplication<Application>().getString(R.string.toast_welcome_back))
     }
 
     /** Ticks on the minute while the UI is visible; silent otherwise (zero polling in background). */
@@ -146,6 +151,9 @@ class SundialViewModel(application: Application) : AndroidViewModel(application)
             repository.launch(app)
         }
     }
+
+    /** Paused grid launches: the plain phone, no rituals. */
+    fun openPlain(app: AppEntry) = repository.launch(app)
 
     fun ritualOpenForTen() {
         pendingRitual.value?.let {

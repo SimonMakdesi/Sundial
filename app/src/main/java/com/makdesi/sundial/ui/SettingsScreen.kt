@@ -65,6 +65,7 @@ fun SettingsScreen(
     onDisableWeather: () -> Unit,
     onSearchCities: suspend (String) -> List<WeatherCity>,
     onSetCity: (WeatherCity) -> Unit,
+    onPause: () -> Unit,
     onDone: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -200,6 +201,22 @@ fun SettingsScreen(
                     onDisableWeather = onDisableWeather,
                     onSearchCities = onSearchCities,
                     onSetCity = onSetCity,
+                )
+
+                Text(
+                    text = stringResource(R.string.settings_pause),
+                    fontFamily = Grotesk,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    letterSpacing = 0.03.em,
+                    color = palette.faint,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 26.dp, bottom = 8.dp)
+                        .border(1.dp, palette.hair, RoundedCornerShape(999.dp))
+                        .clickable { onPause() }
+                        .padding(vertical = 13.dp),
                 )
             }
         }

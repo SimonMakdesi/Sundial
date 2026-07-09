@@ -41,4 +41,23 @@
     <string name="ritual_open_ten">Open for 10 min</string>
     <string name="ritual_not_now">Not now</string>
     <string name="toast_good_call">Good call.</string>
+    <string name="toast_welcome_back">Welcome back.</string>
+    <string name="onboarding_tagline">A home screen that follows the light.</string>
+    <string name="onboarding_welcome_line">Three moments a day — morning, day, evening — each holding only the apps you choose. Nothing is ever blocked.</string>
+    <string name="onboarding_begin">Begin</string>
+    <string name="onboarding_pick_title">Pick your apps</string>
+    <string name="onboarding_pick_hint">Start small. You can tend each moment of the day later, in Your day.</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_whispers_title">Notification whispers</string>
+    <string name="onboarding_whispers_body">A quiet number beside an app\'s name when something waits — no banners, no red. Android will ask for notification access.</string>
+    <string name="onboarding_whispers_allow">Allow whispers</string>
+    <string name="onboarding_whispers_later">Later is fine</string>
+    <string name="onboarding_home_title">Make it home</string>
+    <string name="onboarding_home_body">Set Sundial as your home screen and the day takes its shape.</string>
+    <string name="onboarding_home_set">Set as default</string>
+    <string name="onboarding_done">Done</string>
+    <string name="settings_pause">Pause Sundial</string>
+    <string name="paused_msg">This is your phone without Sundial.</string>
+    <string name="paused_resume">Resume Sundial</string>
+    <string name="paused_change_launcher">Change default launcher</string>
 </resources>

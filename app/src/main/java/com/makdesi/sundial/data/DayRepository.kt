@@ -41,6 +41,44 @@ class DayRepository(private val context: Context, private val scope: CoroutineSc
     private val seededKey = booleanPreferencesKey("seeded")
     private val themeKey = stringPreferencesKey("theme")
     private val alignKey = stringPreferencesKey("align")
+    private val onboardedKey = booleanPreferencesKey("onboarded")
+    private val pausedKey = booleanPreferencesKey("paused")
+
+    /** null while DataStore loads — the UI holds a blank frame, never a flash of onboarding. */
+    val onboarded: StateFlow<Boolean?> = context.sundialDataStore.data
+        .map { prefs ->
+            // Installs that predate onboarding (already seeded) are considered onboarded.
+            (prefs[onboardedKey] ?: false) || (prefs[seededKey] ?: false)
+        }
+        .stateIn(scope, SharingStarted.Eagerly, null)
+
+    val paused: StateFlow<Boolean> = context.sundialDataStore.data
+        .map { it[pausedKey] ?: false }
+        .stateIn(scope, SharingStarted.Eagerly, false)
+
+    /**
+     * Onboarding is the seeder (plan §3.9): the picker's selection fills every
+     * mode that is still empty; customized modes are never overwritten.
+     */
+    fun completeOnboarding(selected: List<String>) {
+        scope.launch {
+            context.sundialDataStore.edit { prefs ->
+                Mode.entries.forEach { mode ->
+                    val current = prefs[appsKey(mode)]?.split(',')?.filter { it.isNotEmpty() }
+                        ?: emptyList()
+                    if (current.isEmpty()) prefs[appsKey(mode)] = selected.joinToString(",")
+                }
+                prefs[onboardedKey] = true
+                prefs[seededKey] = true
+            }
+        }
+    }
+
+    fun setPaused(paused: Boolean) {
+        scope.launch {
+            context.sundialDataStore.edit { it[pausedKey] = paused }
+        }
+    }
 
     val appearance: StateFlow<Appearance> = context.sundialDataStore.data
         .map { prefs ->
@@ -97,23 +135,9 @@ class DayRepository(private val context: Context, private val scope: CoroutineSc
         }
     }
 
-    /**
-     * First run: seed every mode with gentle defaults if present on the device
-     * (messages, camera, phone — plan §3.9). The user adjusts in the editor.
-     */
-    fun seedIfFirstRun(installedPackages: List<String>) {
-        scope.launch {
-            val prefs = context.sundialDataStore.data.first()
-            if (prefs[seededKey] == true) return@launch
-            val wanted = installedPackages.filter { pkg ->
-                listOf("messag", "camera", "dialer", "phone").any { pkg.contains(it) }
-            }.distinct()
-            context.sundialDataStore.edit { p ->
-                Mode.entries.forEach { mode ->
-                    if (p[appsKey(mode)] == null) p[appsKey(mode)] = wanted.joinToString(",")
-                }
-                p[seededKey] = true
-            }
-        }
-    }
+    /** Gentle defaults for the onboarding picker: messages, camera, phone if present. */
+    fun suggestedSeed(installedPackages: List<String>): List<String> =
+        installedPackages.filter { pkg ->
+            listOf("messag", "camera", "dialer", "phone").any { pkg.contains(it) }
+        }.distinct()
 }
